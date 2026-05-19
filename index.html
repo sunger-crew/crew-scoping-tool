@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crew Scoping Tool</title>
+<style>
+:root {
+  --black: #111110;
+  --white: #FFFFFF;
+  --off-white: #F5F3EF;
+  --mid: #E8E5E0;
+  --text2: #6B6860;
+  --text3: #A8A49E;
+  --accent: #E8472A;
+  --accent-bg: #FDECEA;
+  --border: rgba(17,17,16,0.1);
+  --border-strong: rgba(17,17,16,0.18);
+  --r: 3px;
+  --green: #1a5c38; --green-bg: #e6f2ec;
+  --amber: #7a4e0a; --amber-bg: #fbf1dc;
+  --red: #8b1f1f;   --red-bg: #faeaea;
+  --over-color: #c0392b; --over-bg: #fdf0ef;
+  --under-color: #1a5c38; --under-bg: #eaf4ee;
+  --on-color: #4a6741; --on-bg: #edf3ec;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off-white);color:var(--black);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+header{background:var(--black);height:60px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-name{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.logo-div{width:1px;height:18px;background:rgba(255,255,255,.2)}
+.logo-sub{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.header-right{font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.03em}
+
+/* SHELL */
+.shell{max-width:1380px;margin:0 auto;padding:2rem 2rem 5rem}
+
+/* INTRO */
+.intro{margin-bottom:2rem;padding-bottom:1.75rem;border-bottom:1px solid var(--border)}
+.intro h1{font-size:clamp(26px,3.5vw,40px);font-weight:700;letter-spacing:-.025em;line-height:1.1;margin-bottom:8px}
+.intro h1 em{font-style:italic;font-weight:300;color:var(--text2)}
+.intro p{font-size:13px;color:var(--text2);max-width:540px;line-height:1.65}
+
+/* SEARCH + TABS */
+.controls{margin-bottom:1.75rem}
+.search-row{display:flex;gap:10px;align-items:center;margin-bottom:.875rem}
+.search-wrap{position:relative;flex:1;max-width:460px}
+.search-wrap input{width:100%;padding:9px 13px 9px 36px;border:1px solid var(--border-strong);border-radius:var(--r);background:#fff;font-family:inherit;font-size:13px;color:var(--black);outline:none;transition:border-color .15s,box-shadow .15s}
+.search-wrap input:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(17,17,16,.07)}
+.search-wrap input::placeholder{color:var(--text3)}
+.si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+.result-count{font-size:12px;color:var(--text3)}
+.tabs{display:flex;flex-wrap:wrap;gap:5px}
+.tab{padding:4px 13px;border-radius:2px;border:1px solid var(--border-strong);background:#fff;font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .12s}
+.tab:hover{border-color:var(--black);color:var(--black)}
+.tab.on{background:var(--black);border-color:var(--black);color:#fff}
+
+/* CARD GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:1.5rem}
+.card{background:#fff;padding:1.125rem 1.25rem;cursor:pointer;transition:background .1s;position:relative}
+.card:hover{background:#FAFAF8}
+.card.sel{background:var(--black)}
+
+/* card text states */
+.card .cdept,.card .cname,.card .cprice,.card .crange{transition:color .1s}
+.card.sel .cdept{color:rgba(255,255,255,.35)}
+.card.sel .cname,.card.sel .cprice{color:#fff}
+.card.sel .crange{color:rgba(255,255,255,.45)}
+.card.sel .chip{background:rgba(255,255,255,.1);color:rgba(255,255,255,.55)}
+.card.sel .scope-bar-wrap{background:rgba(255,255,255,.08)}
+.card.sel .scope-label{color:rgba(255,255,255,.5)}
+
+.cdept{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.cname{font-size:15px;font-weight:600;color:var(--black);line-height:1.2;margin-bottom:12px;letter-spacing:-.01em}
+.cprice{font-size:23px;font-weight:700;color:var(--black);letter-spacing:-.025em;line-height:1}
+.cprice-label{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.02em}
+.crange{font-size:11px;color:var(--text2);margin:6px 0 10px}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:10px;padding:2px 8px;border-radius:2px;background:var(--off-white);color:var(--text2)}
+
+/* SCOPING HEALTH ON CARD */
+.scope-card{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.card.sel .scope-card{border-top-color:rgba(255,255,255,.1)}
+.scope-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.scope-bar-wrap{display:flex;height:6px;border-radius:2px;overflow:hidden;background:var(--mid);gap:1px}
+.scope-seg{height:100%;transition:width .3s}
+.seg-over{background:var(--over-color)}
+.seg-on{background:#A8C5A0}
+.seg-under{background:var(--under-color)}
+.scope-legend{display:flex;gap:8px;margin-top:4px}
+.sl{font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px}
+.sl-dot{width:6px;height:6px;border-radius:1px;flex-shrink:0}
+
+/* GPM badge */
+.gpm-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:2px;display:inline-block}
+.gpm-hi{background:var(--green-bg);color:var(--green)}
+.gpm-med{background:var(--amber-bg);color:var(--amber)}
+.gpm-lo{background:var(--red-bg);color:var(--red)}
+
+/* DETAIL PANEL */
+.detail{background:#fff;border:1px solid var(--border);margin-bottom:1.5rem;display:none}
+.detail.open{display:block}
+.dhead{background:var(--black);padding:1.75rem 2rem;display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+.dhead-left{}
+.dtag{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+.dtitle{font-size:clamp(18px,2.5vw,26px);font-weight:700;color:#fff;line-height:1.15;letter-spacing:-.02em}
+.dcount{font-size:11px;color:rgba(255,255,255,.32);margin-top:5px;letter-spacing:.03em}
+.dclose{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:2px;color:rgba(255,255,255,.55);width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;font-family:inherit}
+.dclose:hover{background:rgba(255,255,255,.18);color:#fff}
+.dbody{padding:1.75rem 2rem}
+
+/* STAT BOXES */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:1.75rem}
+@media(max-width:680px){.stats{grid-template-columns:repeat(3,1fr)}}
+.sbox{background:var(--off-white);padding:.8rem 1rem}
+.slbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.sval{font-size:19px;font-weight:700;color:var(--black);line-height:1.15;letter-spacing:-.02em}
+.ssub{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* SECTION HEADS */
+.sec-head{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+
+/* SCOPING HEALTH DETAIL */
+.health-block{background:var(--off-white);border:1px solid var(--border);padding:1.25rem 1.5rem;margin-bottom:1.75rem;border-radius:var(--r)}
+.health-gauge{display:flex;height:10px;border-radius:2px;overflow:hidden;gap:1px;margin:10px 0 8px}
+.hg-seg{height:100%}
+.health-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.health-pill{font-size:11px;font-weight:500;padding:4px 12px;border-radius:2px;display:inline-flex;align-items:center;gap:5px}
+.hp-over{background:var(--over-bg);color:var(--over-color)}
+.hp-on{background:var(--on-bg);color:var(--on-color)}
+.hp-under{background:var(--under-bg);color:var(--under-color)}
+.health-plain{font-size:12px;color:var(--text2);line-height:1.65;margin-top:6px}
+.health-plain strong{color:var(--black);font-weight:600}
+
+/* PRICE DIST */
+.dist-block{margin-bottom:1.75rem}
+.dist-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.dist-lbl{width:68px;text-align:right;font-size:11px;color:var(--text3);flex-shrink:0}
+.dist-track{flex:1;height:14px;background:var(--off-white);border-radius:2px;overflow:hidden;position:relative}
+.dist-bar{position:absolute;top:0;bottom:0;border-radius:2px}
+.bar-outer{background:var(--mid)}
+.bar-inner{background:var(--black)}
+.dist-val{width:110px;font-size:11px;color:var(--text2);flex-shrink:0}
+
+/* EXAMPLES */
+.ex-table{width:100%;border-collapse:collapse;font-size:12px}
+.ex-table th{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:0 8px 8px 0;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.ex-table th.r,.ex-table td.r{text-align:right;padding-right:0;padding-left:8px}
+.ex-table td{padding:9px 8px 9px 0;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--black)}
+.ex-table tr:last-child td{border-bottom:none}
+.ex-name{font-weight:500;color:var(--black);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ex-client{font-size:10px;color:var(--text3);margin-top:1px}
+.ex-amt{font-weight:700;font-size:13px;white-space:nowrap}
+.var-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:2px;white-space:nowrap;display:inline-block}
+.var-over{background:var(--over-bg);color:var(--over-color)}
+.var-on{background:var(--on-bg);color:var(--on-color)}
+.var-under{background:var(--under-bg);color:var(--under-color)}
+.btn-row{display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:2px;border:1px solid var(--border-strong);background:#fff;font-size:10px;font-weight:500;color:var(--text2);cursor:pointer;text-decoration:none;transition:all .12s;font-family:inherit;white-space:nowrap;letter-spacing:.02em}
+.btn:hover{background:var(--black);border-color:var(--black);color:#fff}
+.btn-sp{background:var(--off-white)}
+.btn-sp:hover{background:var(--black);color:#fff}
+
+.dnote{font-size:11px;color:var(--text3);padding-top:1rem;border-top:1px solid var(--border);margin-top:1.25rem;line-height:1.65}
+.empty{background:#fff;text-align:center;padding:4rem;color:var(--text3);font-size:13px;grid-column:1/-1}
+
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;background:#fff}
+.ft-logo{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--black)}
+.ft-copy{font-size:11px;color:var(--text3)}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-name">Crew</div>
+    <div class="logo-div"></div>
+    <div class="logo-sub">Project Scoping Tool</div>
+  </div>
+  <div class="header-right">979 projects &nbsp;·&nbsp; 35 service types &nbsp;·&nbsp; Internal use only</div>
+</header>
+
+<div class="shell">
+  <div class="intro">
+    <h1>Scope with <em>confidence.</em></h1>
+    <p>Real pricing, hours, and scoping health from 979 completed Crew projects. Price = what we billed. Hours variance and GPM show where we over- or under-scoped.</p>
+  </div>
+
+  <div class="controls">
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="si">⌕</span>
+        <input type="text" id="q" placeholder="Search service types, departments…" oninput="render()">
+      </div>
+      <span class="result-count" id="rc"></span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+
+  <div class="detail" id="det"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>
+  <div class="ft-logo">Crew Marketing Partners</div>
+  <div class="ft-copy">Internal tool &nbsp;·&nbsp; Dallas / Toronto / Vancouver &nbsp;·&nbsp; © 2026</div>
+</footer>
+
+<script>
+const SP = 'https://relevention.sharepoint.com/:f:/s/CREWWay/IgAYzJ094M-uQY_mdUCNVwVkATcuwpto-Xklr1KqKRMsoCY?e=3cd27u';
+
+const DATA = {"Agency Engagement Retainer":{"count":45,"dept":"Account Services","billed_p10":6000,"billed_p25":11000,"billed_median":22722,"billed_p75":38880,"billed_p90":50796,"budget_hrs_p25":60,"budget_hrs_median":128,"budget_hrs_p75":223,"hrs_var_median":6.6,"pct_over":27,"pct_under":42,"pct_on":31,"n_variance":45,"gpm_p25":45,"gpm_median":66,"gpm_p75":74,"wks_p25":15.3,"wks_median":35.1,"wks_p75":51.7,"examples":[{"billed":139800,"actual_hrs":450.2,"budget_hrs":381.8,"hrs_variance":-68.5,"hrs_var_pct":-17.9,"gpm":28,"name":"Marketing Engagement","client":"Panago Pizza Inc.","wks":35.1},{"billed":57000,"actual_hrs":257.2,"budget_hrs":245.5,"hrs_variance":-11.7,"hrs_var_pct":-4.7,"gpm":62.3,"name":"2025 RDM AOR: Digital, Web, CPM, Creative","client":"RDM Lawyers LLP","wks":52.3},{"billed":54000,"actual_hrs":235.5,"budget_hrs":277.8,"hrs_variance":42.2,"hrs_var_pct":15.2,"gpm":65.8,"name":"2024 RDM AOR: Digital, Web, CPM, Creative","client":"RDM Lawyers LLP","wks":51},{"billed":53565,"actual_hrs":240.2,"budget_hrs":297.2,"hrs_variance":57,"hrs_var_pct":19.2,"gpm":78.9,"name":"Marketing Retainer","client":"Vicenzi","wks":50.4},{"billed":51660,"actual_hrs":9.5,"budget_hrs":228,"hrs_variance":218.5,"hrs_var_pct":95.8,"gpm":89.9,"name":"Brand, DTC & Account Management","client":"Hydragreens Produce Ltd.","wks":12.6}]},"Marketing Sprints & Strategies":{"count":13,"dept":"Account Services","billed_p10":4795,"billed_p25":6480,"billed_median":17000,"billed_p75":28000,"billed_p90":39692,"budget_hrs_p25":36,"budget_hrs_median":77,"budget_hrs_p75":155,"hrs_var_median":4.7,"pct_over":0,"pct_under":46,"pct_on":54,"n_variance":13,"gpm_p25":45,"gpm_median":59,"gpm_p75":69,"wks_p25":9.7,"wks_median":16.3,"wks_p75":35.1,"examples":[{"billed":48000,"actual_hrs":206.6,"budget_hrs":232.8,"hrs_variance":26.2,"hrs_var_pct":11.3,"gpm":41,"name":"Brand and Marketing Strategy","client":"StructureCraft Builders Inc","wks":70.9},{"billed":42570,"actual_hrs":242.2,"budget_hrs":242,"hrs_variance":-0.2,"hrs_var_pct":-0.1,"gpm":61,"name":"Long Term Strategy for Milk Calendar","client":"Dairy Farmers of Ontario","wks":43.1},{"billed":28180,"actual_hrs":155.3,"budget_hrs":157.5,"hrs_variance":2.2,"hrs_var_pct":1.4,"gpm":58.2,"name":"Marketing Sprint & Brand Strategy","client":"Lyrix International (Mokable)","wks":18.3},{"billed":28000,"actual_hrs":161.2,"budget_hrs":155.5,"hrs_variance":-5.8,"hrs_var_pct":-3.7,"gpm":27.1,"name":"Communication Strategy","client":"Polytainers","wks":35.1},{"billed":25000,"actual_hrs":73.8,"budget_hrs":138.8,"hrs_variance":65,"hrs_var_pct":46.8,"gpm":79.6,"name":"Marketing Strategy","client":"Lasser Produce Ltd.","wks":8.1}]},"Research & Insights":{"count":12,"dept":"Account Services","billed_p10":5165,"billed_p25":8840,"billed_median":11523,"billed_p75":20343,"billed_p90":25813,"budget_hrs_p25":24,"budget_hrs_median":35,"budget_hrs_p75":47,"hrs_var_median":28.5,"pct_over":8,"pct_under":75,"pct_on":17,"n_variance":12,"gpm_p25":27,"gpm_median":49,"gpm_p75":57,"wks_p25":5.6,"wks_median":7.9,"wks_p75":10.9,"examples":[{"billed":29650,"actual_hrs":32.2,"budget_hrs":43.5,"hrs_variance":11.2,"hrs_var_pct":25.9,"gpm":31,"name":"Consumer Research Concept Testing","client":"Silver Hills Bakery","wks":12},{"billed":25965,"actual_hrs":17.5,"budget_hrs":43.5,"hrs_variance":26,"hrs_var_pct":59.8,"gpm":39.4,"name":"Consumer Concept Testing","client":"Vicenzi","wks":7.3},{"billed":24448,"actual_hrs":44.8,"budget_hrs":44.8,"hrs_variance":0,"hrs_var_pct":0,"gpm":13.3,"name":"Packaging Research","client":"Farmer Focus","wks":6.1},{"billed":18975,"actual_hrs":134,"budget_hrs":115,"hrs_variance":-19,"hrs_var_pct":-16.5,"gpm":47.3,"name":"Market Research & Phase 1 Media Plan","client":"Escape Trailer Industries","wks":7.4},{"billed":17820,"actual_hrs":102.2,"budget_hrs":99,"hrs_variance":-3.2,"hrs_var_pct":-3.3,"gpm":54.7,"name":"Marketing & Brand Audit","client":"Atmosphera","wks":8.3}]},"Misc. Marketing Support":{"count":7,"dept":"Account Services","billed_p10":981,"billed_p25":1470,"billed_median":4420,"billed_p75":11981,"billed_p90":13173,"budget_hrs_p25":8,"budget_hrs_median":26,"budget_hrs_p75":73,"hrs_var_median":0,"pct_over":0,"pct_under":29,"pct_on":71,"n_variance":7,"gpm_p25":64,"gpm_median":74,"gpm_p75":75,"wks_p25":10.1,"wks_median":21.6,"wks_p75":30,"examples":[{"billed":14538,"actual_hrs":70.8,"budget_hrs":85.8,"hrs_variance":15,"hrs_var_pct":17.5,"gpm":74.1,"name":"Project Management – Creamers","client":"Earth's Own","wks":17.1},{"billed":12263,"actual_hrs":81.2,"budget_hrs":78.2,"hrs_variance":-3,"hrs_var_pct":-3.8,"gpm":75.9,"name":"Ad Hoc Client Requests","client":"Farmer Focus","wks":41.1},{"billed":11700,"actual_hrs":69.2,"budget_hrs":69.2,"hrs_variance":0,"hrs_var_pct":0,"gpm":67.3,"name":"Pick Pork F26 Planning","client":"Canada Pork","wks":22.4},{"billed":4420,"actual_hrs":25.2,"budget_hrs":26,"hrs_variance":0.8,"hrs_var_pct":2.9,"gpm":74.7,"name":"Lead Forensics Support","client":"Phase 3 AV","wks":37.6},{"billed":1905,"actual_hrs":11.5,"budget_hrs":11,"hrs_variance":-0.5,"hrs_var_pct":-4.5,"gpm":61.3,"name":"Walmart Connect Planning & Support","client":"Naked Natural Foods","wks":21.6}]},"PR":{"count":6,"dept":"Account Services","billed_p10":1992,"billed_p25":3072,"billed_median":4789,"billed_p75":8607,"billed_p90":10000,"budget_hrs_p25":11,"budget_hrs_median":16,"budget_hrs_p75":25,"hrs_var_median":33,"pct_over":33,"pct_under":67,"pct_on":0,"n_variance":6,"gpm_p25":16,"gpm_median":48,"gpm_p75":55,"wks_p25":2.8,"wks_median":9.3,"wks_p75":27.4,"examples":[{"billed":10500,"actual_hrs":18.9,"budget_hrs":28,"hrs_variance":9.1,"hrs_var_pct":32.7,"gpm":60.7,"name":"Braden Douglas, Board Advisor – 2024","client":"Apex Food Source Ltd","wks":52},{"billed":9500,"actual_hrs":18.8,"budget_hrs":31.5,"hrs_variance":12.8,"hrs_var_pct":40.5,"gpm":53.6,"name":"Kii Fruit & Fire Press Release","client":"NuStef Baking Ltd.","wks":10.6},{"billed":5929,"actual_hrs":10.8,"budget_hrs":16.8,"hrs_variance":6.1,"hrs_var_pct":36,"gpm":56,"name":"Keynote Speaking","client":"Canada Pork","wks":1},{"billed":3650,"actual_hrs":18.5,"budget_hrs":10,"hrs_variance":-8.5,"hrs_var_pct":-85,"gpm":-25.4,"name":"Saskatchewan Agri-Value Forum / Speaking","client":"Ag-West Bio Inc.","wks":0.3},{"billed":2880,"actual_hrs":48.8,"budget_hrs":16,"hrs_variance":-32.8,"hrs_var_pct":-204.7,"gpm":7.3,"name":"2024 Trade Publications Sponsorships","client":"AlphaPoly Corporation","wks":33}]},"Brand Strategy, Packaging & Identity Systems":{"count":37,"dept":"Creative","billed_p10":21042,"billed_p25":32985,"billed_median":42345,"billed_p75":49810,"billed_p90":73567,"budget_hrs_p25":180,"budget_hrs_median":222,"budget_hrs_p75":283,"hrs_var_median":2,"pct_over":19,"pct_under":38,"pct_on":43,"n_variance":37,"gpm_p25":58,"gpm_median":67,"gpm_p75":74,"wks_p25":17.1,"wks_median":23.9,"wks_p75":36.1,"examples":[{"billed":85000,"actual_hrs":224,"budget_hrs":472,"hrs_variance":248,"hrs_var_pct":52.5,"gpm":83.8,"name":"Brand, Identity & Packaging","client":"Old Country Sausages","wks":70.4},{"billed":81450,"actual_hrs":263.6,"budget_hrs":397.5,"hrs_variance":133.9,"hrs_var_pct":33.7,"gpm":62.5,"name":"Marketing Launch Strategy, Brand Creation & Concepts","client":"MLNV, LLC (Mr. Lid)","wks":23.9},{"billed":80000,"actual_hrs":296.6,"budget_hrs":392.8,"hrs_variance":96.1,"hrs_var_pct":24.5,"gpm":72.1,"name":"Brand Strategy, Name Exploration, Visual Identity & Packaging","client":"Humble Ego Inc.","wks":31.3},{"billed":75000,"actual_hrs":455.4,"budget_hrs":417.5,"hrs_variance":-37.9,"hrs_var_pct":-9.1,"gpm":40.2,"name":"Brar's Masterbrand Strategy","client":"OIC Foods","wks":29.1},{"billed":72613,"actual_hrs":337.8,"budget_hrs":329.2,"hrs_variance":-8.5,"hrs_var_pct":-2.6,"gpm":60.7,"name":"Kinghaven Farms Leafy Greens Brand Strategy & Identity","client":"Kinghaven Farms Limited","wks":42}]},"Campaign Strategy & Concepts":{"count":16,"dept":"Creative","billed_p10":11400,"billed_p25":14203,"billed_median":19900,"billed_p75":31215,"billed_p90":64002,"budget_hrs_p25":67,"budget_hrs_median":96,"budget_hrs_p75":138,"hrs_var_median":5.5,"pct_over":25,"pct_under":25,"pct_on":50,"n_variance":16,"gpm_p25":37,"gpm_median":57,"gpm_p75":64,"wks_p25":8.5,"wks_median":13.9,"wks_p75":18.6,"examples":[{"billed":88322,"actual_hrs":263.5,"budget_hrs":284.8,"hrs_variance":21.2,"hrs_var_pct":7.5,"gpm":37.9,"name":"Q2 Fruitsource Campaign","client":"SunRype / A. Lassonde","wks":20.6},{"billed":75680,"actual_hrs":58.8,"budget_hrs":70,"hrs_variance":11.2,"hrs_var_pct":16.1,"gpm":35.2,"name":"DFO \"Say Cheese\"","client":"Dairy Farmers of Ontario","wks":11.1},{"billed":52325,"actual_hrs":445.8,"budget_hrs":285,"hrs_variance":-160.8,"hrs_var_pct":-56.4,"gpm":29.5,"name":"Marigold Brand Launch Campaign Ideation","client":"Conagra Brands Canada Inc.","wks":22.9},{"billed":49860,"actual_hrs":208,"budget_hrs":228,"hrs_variance":20,"hrs_var_pct":8.8,"gpm":60.1,"name":"Recruitment Campaign","client":"Trinity Western University","wks":17.1},{"billed":25000,"actual_hrs":127.2,"budget_hrs":144,"hrs_variance":16.8,"hrs_var_pct":11.6,"gpm":71.4,"name":"Idea Refinement for \"Eat with Us\" & \"Say Cheese\"","client":"Dairy Farmers of Ontario","wks":12}]},"Campaign Asset Development & Rollout":{"count":42,"dept":"Creative","billed_p10":8054,"billed_p25":10467,"billed_median":19927,"billed_p75":39753,"billed_p90":63968,"budget_hrs_p25":59,"budget_hrs_median":103,"budget_hrs_p75":174,"hrs_var_median":3.2,"pct_over":26,"pct_under":38,"pct_on":36,"n_variance":42,"gpm_p25":45,"gpm_median":62,"gpm_p75":70,"wks_p25":7.4,"wks_median":10.8,"wks_p75":15.6,"examples":[{"billed":155621,"actual_hrs":566.4,"budget_hrs":405.8,"hrs_variance":-160.7,"hrs_var_pct":-39.6,"gpm":29,"name":"SunRype Beverage 2024 Campaign Concepts & Dev","client":"SunRype / A. Lassonde","wks":43.1},{"billed":126815,"actual_hrs":96.2,"budget_hrs":159,"hrs_variance":62.8,"hrs_var_pct":39.5,"gpm":37.8,"name":"DFO \"Eat With Us\" Influencer Campaign","client":"Dairy Farmers of Ontario","wks":10.1},{"billed":89264,"actual_hrs":71.5,"budget_hrs":121.2,"hrs_variance":49.8,"hrs_var_pct":41,"gpm":24.3,"name":"Q2 Owned Asset Creative Dev + Production","client":"Panago Pizza Inc.","wks":7.4},{"billed":85477,"actual_hrs":355.8,"budget_hrs":234.5,"hrs_variance":-121.3,"hrs_var_pct":-51.7,"gpm":18.4,"name":"Creative Rollout + Production (Paid Media)","client":"SunRype / A. Lassonde","wks":15.7},{"billed":64859,"actual_hrs":257.3,"budget_hrs":245.3,"hrs_variance":-12,"hrs_var_pct":-4.9,"gpm":44.7,"name":"2024 Campaign","client":"Skipper Otto","wks":21.7}]},"Packaging Design":{"count":104,"dept":"Creative","billed_p10":2002,"billed_p25":3348,"billed_median":6722,"billed_p75":12129,"billed_p90":22087,"budget_hrs_p25":19,"budget_hrs_median":37,"budget_hrs_p75":63,"hrs_var_median":2.4,"pct_over":28,"pct_under":39,"pct_on":33,"n_variance":104,"gpm_p25":63,"gpm_median":70,"gpm_p75":77,"wks_p25":6.1,"wks_median":12,"wks_p75":18.6,"examples":[{"billed":143910,"actual_hrs":763.5,"budget_hrs":765,"hrs_variance":1.5,"hrs_var_pct":0.2,"gpm":69,"name":"Snacks Packaging Rollout & Production","client":"SunRype / A. Lassonde","wks":31.6},{"billed":80000,"actual_hrs":440.8,"budget_hrs":470.5,"hrs_variance":29.8,"hrs_var_pct":6.3,"gpm":70.3,"name":"SunRype Snacks Packaging Concepts","client":"SunRype / A. Lassonde","wks":17.6},{"billed":70000,"actual_hrs":350.2,"budget_hrs":296.8,"hrs_variance":-53.5,"hrs_var_pct":-18,"gpm":33.1,"name":"Brand Launch Concepts + Production","client":"Silver Hills Bakery","wks":18.4},{"billed":32110,"actual_hrs":228.5,"budget_hrs":184.5,"hrs_variance":-44,"hrs_var_pct":-23.8,"gpm":60.1,"name":"Lacteeze Packaging","client":"Aurium","wks":44.1},{"billed":31755,"actual_hrs":182.8,"budget_hrs":176.2,"hrs_variance":-6.5,"hrs_var_pct":-3.7,"gpm":50.4,"name":"Packaging Strategy (Light) + Concepts","client":"Naturally Homegrown Foods Ltd.","wks":9.9}]},"Brand Guidelines":{"count":10,"dept":"Creative","billed_p10":1398,"billed_p25":2443,"billed_median":6406,"billed_p75":11896,"billed_p90":15557,"budget_hrs_p25":18,"budget_hrs_median":34,"budget_hrs_p75":64,"hrs_var_median":-6,"pct_over":50,"pct_under":30,"pct_on":20,"n_variance":10,"gpm_p25":60,"gpm_median":70,"gpm_p75":74,"wks_p25":3.9,"wks_median":14.1,"wks_p75":14.3,"examples":[{"billed":20127,"actual_hrs":88,"budget_hrs":130,"hrs_variance":42,"hrs_var_pct":32.3,"gpm":75.9,"name":"Brand Guidelines Bev & Snacks Masterbrand","client":"SunRype / A. Lassonde","wks":14.3},{"billed":15050,"actual_hrs":79.2,"budget_hrs":92.5,"hrs_variance":13.2,"hrs_var_pct":14.3,"gpm":72.8,"name":"Brand Guideline","client":"Panago Pizza Inc.","wks":15.6},{"billed":12825,"actual_hrs":71.2,"budget_hrs":71.2,"hrs_variance":0,"hrs_var_pct":0,"gpm":67.2,"name":"Lagostina Execution Playbook 2024","client":"Groupe SEB","wks":14.1},{"billed":9110,"actual_hrs":52.8,"budget_hrs":43,"hrs_variance":-9.8,"hrs_var_pct":-22.7,"gpm":59.1,"name":"All ECCO Brands, Logos & Guidelines Updates","client":"ECCO Group of Companies","wks":14.1},{"billed":8447,"actual_hrs":60.5,"budget_hrs":46,"hrs_variance":-14.5,"hrs_var_pct":-31.5,"gpm":61.7,"name":"Brand Playbook","client":"Farmer Focus","wks":39.6}]},"Single Creative Execution":{"count":53,"dept":"Creative","billed_p10":1326,"billed_p25":1760,"billed_median":5050,"billed_p75":9300,"billed_p90":15359,"budget_hrs_p25":10,"budget_hrs_median":27,"budget_hrs_p75":46,"hrs_var_median":2.4,"pct_over":28,"pct_under":34,"pct_on":38,"n_variance":53,"gpm_p25":61,"gpm_median":70,"gpm_p75":76,"wks_p25":3.6,"wks_median":8,"wks_p75":14.1,"examples":[{"billed":155189,"actual_hrs":446.9,"budget_hrs":457.8,"hrs_variance":10.9,"hrs_var_pct":2.4,"gpm":44.5,"name":"2026 Milk Calendar","client":"Dairy Farmers of Ontario","wks":33.7},{"billed":144773,"actual_hrs":601.5,"budget_hrs":408.5,"hrs_variance":-193,"hrs_var_pct":-47.2,"gpm":32.8,"name":"2025 Milk Calendar","client":"Dairy Farmers of Ontario","wks":28.6},{"billed":73849,"actual_hrs":26,"budget_hrs":44.5,"hrs_variance":18.5,"hrs_var_pct":41.6,"gpm":16.8,"name":"Q2 Flyers","client":"Panago Pizza Inc.","wks":6.6},{"billed":51077,"actual_hrs":200.2,"budget_hrs":237,"hrs_variance":36.8,"hrs_var_pct":15.5,"gpm":69.9,"name":"2023 COEDC Economic Profile","client":"Regional District of Central Okanagan","wks":34.7},{"billed":43400,"actual_hrs":131.5,"budget_hrs":104.5,"hrs_variance":-27,"hrs_var_pct":-25.8,"gpm":66.9,"name":"DFO 60th Commemorative Book","client":"Dairy Farmers of Ontario","wks":6.6}]},"Presentation Deck":{"count":10,"dept":"Creative","billed_p10":7370,"billed_p25":7566,"billed_median":8635,"billed_p75":18603,"billed_p90":23759,"budget_hrs_p25":39,"budget_hrs_median":42,"budget_hrs_p75":86,"hrs_var_median":11.3,"pct_over":20,"pct_under":50,"pct_on":30,"n_variance":10,"gpm_p25":63,"gpm_median":75,"gpm_p75":77,"wks_p25":6.4,"wks_median":11.8,"wks_p75":15.8,"examples":[{"billed":39960,"actual_hrs":245.2,"budget_hrs":249.8,"hrs_variance":4.5,"hrs_var_pct":1.8,"gpm":77.4,"name":"Costco Concepts & Sales Deck","client":"Vicenzi","wks":21.9},{"billed":21960,"actual_hrs":28.5,"budget_hrs":94,"hrs_variance":65.5,"hrs_var_pct":69.7,"gpm":84.3,"name":"Credentials Presentation (PowerPoint)","client":"H. H. Hawkins Ltd.","wks":13.4},{"billed":21055,"actual_hrs":91.8,"budget_hrs":123.5,"hrs_variance":31.7,"hrs_var_pct":25.6,"gpm":75.4,"name":"Corporate Presentation – Brand Strategy","client":"Lantic Company","wks":16.4},{"billed":11250,"actual_hrs":53.8,"budget_hrs":62.5,"hrs_variance":8.8,"hrs_var_pct":14,"gpm":74.5,"name":"X2 Pitchdecks: Influencer & Retailer Partnerships","client":"MLNV, LLC (Mr. Lid)","wks":5.7},{"billed":9350,"actual_hrs":33,"budget_hrs":41.5,"hrs_variance":8.5,"hrs_var_pct":20.5,"gpm":68.5,"name":"Sales Deck","client":"Phase 3 AV","wks":16.4}]},"Tradeshow Concept & Design":{"count":12,"dept":"Creative","billed_p10":3444,"billed_p25":5763,"billed_median":6805,"billed_p75":9399,"billed_p90":12299,"budget_hrs_p25":17,"budget_hrs_median":39,"budget_hrs_p75":50,"hrs_var_median":0.2,"pct_over":42,"pct_under":25,"pct_on":33,"n_variance":12,"gpm_p25":65,"gpm_median":74,"gpm_p75":81,"wks_p25":3.8,"wks_median":7,"wks_p75":7.9,"examples":[{"billed":23496,"actual_hrs":129.2,"budget_hrs":130.5,"hrs_variance":1.2,"hrs_var_pct":1,"gpm":82,"name":"Tradeshow Booth Design & Production (10x20)","client":"Vicenzi","wks":13},{"billed":12621,"actual_hrs":79.8,"budget_hrs":61.8,"hrs_variance":-18,"hrs_var_pct":-29.2,"gpm":58.4,"name":"Tradeshow Updates + Internal Sales Tools","client":"Farmer Focus","wks":7},{"billed":9405,"actual_hrs":51.4,"budget_hrs":52,"hrs_variance":0.6,"hrs_var_pct":1.2,"gpm":68.2,"name":"Freedom AFI Trade Show Booth Design","client":"Freedom CNG","wks":7.9},{"billed":9397,"actual_hrs":60,"budget_hrs":50,"hrs_variance":-10,"hrs_var_pct":-20,"gpm":65.2,"name":"Tradeshow Experience – Light","client":"Manitoba Milling Company","wks":8},{"billed":7625,"actual_hrs":25.8,"budget_hrs":40,"hrs_variance":14.2,"hrs_var_pct":35.6,"gpm":77.1,"name":"Trade Show Booth Creative Production","client":"Portofino Bakery","wks":5}]},"Influencer Box":{"count":5,"dept":"Creative","billed_p10":3883,"billed_p25":6332,"billed_median":6970,"billed_p75":8560,"billed_p90":16624,"budget_hrs_p25":37,"budget_hrs_median":41,"budget_hrs_p75":44,"hrs_var_median":1.1,"pct_over":20,"pct_under":20,"pct_on":60,"n_variance":5,"gpm_p25":67,"gpm_median":69,"gpm_p75":80,"wks_p25":12.4,"wks_median":14.3,"wks_p75":30,"examples":[{"billed":22000,"actual_hrs":183.6,"budget_hrs":146.5,"hrs_variance":-37.1,"hrs_var_pct":-25.3,"gpm":55.1,"name":"Gift Box Research and Design","client":"The Raw Carrot","wks":30},{"billed":8560,"actual_hrs":44,"budget_hrs":44.5,"hrs_variance":0.5,"hrs_var_pct":1.1,"gpm":66.8,"name":"Prospecting Gift Box Design","client":"Phase 3 AV","wks":37.1},{"billed":6970,"actual_hrs":26.5,"budget_hrs":41,"hrs_variance":14.5,"hrs_var_pct":35.4,"gpm":80.9,"name":"Box Design + Renderings","client":"SunRype / A. Lassonde","wks":9.4},{"billed":6332,"actual_hrs":37.2,"budget_hrs":37.2,"hrs_variance":0,"hrs_var_pct":0,"gpm":80.5,"name":"DM Box","client":"FreshPure Waters","wks":12.4},{"billed":2250,"actual_hrs":14.8,"budget_hrs":15,"hrs_variance":0.2,"hrs_var_pct":1.7,"gpm":69.5,"name":"Gift Box Completion","client":"Phase 3 AV","wks":14.3}]},"Naming":{"count":4,"dept":"Creative","billed_p10":3942,"billed_p25":4185,"billed_median":6930,"billed_p75":9655,"billed_p90":9862,"budget_hrs_p25":23,"budget_hrs_median":27,"budget_hrs_p75":36,"hrs_var_median":36.6,"pct_over":0,"pct_under":75,"pct_on":25,"n_variance":4,"gpm_p25":43,"gpm_median":61,"gpm_p75":69,"wks_p25":1.1,"wks_median":3.2,"wks_p75":5.9,"examples":[{"billed":10000,"actual_hrs":21.5,"budget_hrs":30.5,"hrs_variance":9,"hrs_var_pct":29.5,"gpm":54.3,"name":"Lagostina Product Naming Project 2024","client":"Groupe SEB","wks":7.7},{"billed":9540,"actual_hrs":26.2,"budget_hrs":53,"hrs_variance":26.8,"hrs_var_pct":50.5,"gpm":66.8,"name":"Milk Replacement Naming","client":"Earth's Own","wks":1.1},{"billed":4320,"actual_hrs":13.5,"budget_hrs":24,"hrs_variance":10.5,"hrs_var_pct":43.8,"gpm":9.4,"name":"Milk Product French Naming Exploration","client":"Earth's Own","wks":1.1},{"billed":3780,"actual_hrs":22.2,"budget_hrs":21,"hrs_variance":-1.2,"hrs_var_pct":-6,"gpm":74.2,"name":"T-fal New Stone Product Name / Tagline","client":"Groupe SEB","wks":5.3}]},"Logo Development":{"count":7,"dept":"Creative","billed_p10":1008,"billed_p25":1135,"billed_median":1190,"billed_p75":6615,"billed_p90":10968,"budget_hrs_p25":6,"budget_hrs_median":7,"budget_hrs_p75":34,"hrs_var_median":-14.5,"pct_over":57,"pct_under":14,"pct_on":29,"n_variance":7,"gpm_p25":68,"gpm_median":68,"gpm_p75":69,"wks_p25":1.9,"wks_median":4,"wks_p75":5,"examples":[{"billed":15000,"actual_hrs":105.3,"budget_hrs":92,"hrs_variance":-13.3,"hrs_var_pct":-14.5,"gpm":67.6,"name":"Texas Gold Brand Strategy & Logo Upgrade","client":"Texas Gold Shrimp","wks":13.3},{"billed":8280,"actual_hrs":40.2,"budget_hrs":42,"hrs_variance":1.8,"hrs_var_pct":4.2,"gpm":69.3,"name":"Logo Design and Vision Casting","client":"Trinity Western University","wks":4.9},{"billed":4950,"actual_hrs":24.2,"budget_hrs":27.5,"hrs_variance":3.2,"hrs_var_pct":11.8,"gpm":75.8,"name":"North Drill Geotechnical Series: Logo Dev","client":"Multi Power Products","wks":5},{"billed":1190,"actual_hrs":8.2,"budget_hrs":7,"hrs_variance":-1.2,"hrs_var_pct":-17.9,"gpm":67.6,"name":"SunRype Organic Logo Package","client":"SunRype / A. Lassonde","wks":1.9},{"billed":1190,"actual_hrs":7,"budget_hrs":7,"hrs_variance":0,"hrs_var_pct":0,"gpm":68.7,"name":"Secondary & Tertiary Logo","client":"Naked Natural Foods","wks":4}]},"Digital Creative Assets":{"count":22,"dept":"Creative","billed_p10":1411,"billed_p25":2486,"billed_median":3165,"billed_p75":6255,"billed_p90":10314,"budget_hrs_p25":12,"budget_hrs_median":19,"budget_hrs_p75":35,"hrs_var_median":-3.1,"pct_over":41,"pct_under":36,"pct_on":23,"n_variance":22,"gpm_p25":60,"gpm_median":68,"gpm_p75":74,"wks_p25":2.1,"wks_median":4.8,"wks_p75":8,"examples":[{"billed":24183,"actual_hrs":54.2,"budget_hrs":66.5,"hrs_variance":12.2,"hrs_var_pct":18.4,"gpm":44.8,"name":"Q1 Lunch Promo | Owned Media Assets","client":"Panago Pizza Inc.","wks":5.3},{"billed":11700,"actual_hrs":48.8,"budget_hrs":47.5,"hrs_variance":-1.2,"hrs_var_pct":-2.6,"gpm":43.1,"name":"Good Bites Digital Ads | Costco Support","client":"SunRype / A. Lassonde","wks":3.1},{"billed":10500,"actual_hrs":46.6,"budget_hrs":64,"hrs_variance":17.4,"hrs_var_pct":27.2,"gpm":84.1,"name":"Texas Gold Digital Asset Development","client":"Texas Gold Shrimp","wks":20},{"billed":8640,"actual_hrs":25.2,"budget_hrs":48,"hrs_variance":22.8,"hrs_var_pct":47.4,"gpm":89.9,"name":"Amazon Page Design","client":"Vicenzi","wks":10.4},{"billed":7680,"actual_hrs":55.6,"budget_hrs":46,"hrs_variance":-9.6,"hrs_var_pct":-21,"gpm":59.6,"name":"2026 Milk Calendar – Media Assets","client":"Dairy Farmers of Ontario","wks":26.4}]},"Misc. Creative & Design Production Support":{"count":118,"dept":"Creative","billed_p10":967,"billed_p25":1271,"billed_median":2784,"billed_p75":6727,"billed_p90":11232,"budget_hrs_p25":7,"budget_hrs_median":14,"budget_hrs_p75":37,"hrs_var_median":1.9,"pct_over":28,"pct_under":39,"pct_on":33,"n_variance":118,"gpm_p25":64,"gpm_median":72,"gpm_p75":79,"wks_p25":1.9,"wks_median":4.3,"wks_p75":10,"examples":[{"billed":51090,"actual_hrs":152.2,"budget_hrs":233.5,"hrs_variance":81.3,"hrs_var_pct":34.8,"gpm":73.8,"name":"Bassili's Best: X5 SKUs Design, Production & Photography","client":"Inovata Foods","wks":11},{"billed":47437,"actual_hrs":253.5,"budget_hrs":272.2,"hrs_variance":18.8,"hrs_var_pct":6.9,"gpm":70.2,"name":"Digital Creative Assets","client":"Escape Trailer Industries","wks":25.3},{"billed":34160,"actual_hrs":103.5,"budget_hrs":229,"hrs_variance":125.5,"hrs_var_pct":54.8,"gpm":82.8,"name":"Creative Team","client":"Simply So Foods","wks":54.9},{"billed":32400,"actual_hrs":98.8,"budget_hrs":174,"hrs_variance":75.2,"hrs_var_pct":43.2,"gpm":84.4,"name":"Creative Retainer 2023 (15 hrs/month)","client":"RDM Lawyers LLP","wks":51.3},{"billed":19685,"actual_hrs":144.5,"budget_hrs":127,"hrs_variance":-17.5,"hrs_var_pct":-13.8,"gpm":72,"name":"Creative & Support Team Engagement","client":"Farmer Focus","wks":54}]},"Digital Campaign Setup, Optimization & Reporting":{"count":44,"dept":"Digital","billed_p10":2863,"billed_p25":5447,"billed_median":10720,"billed_p75":16845,"billed_p90":32263,"budget_hrs_p25":21,"budget_hrs_median":51,"budget_hrs_p75":77,"hrs_var_median":8.1,"pct_over":16,"pct_under":48,"pct_on":36,"n_variance":44,"gpm_p25":68,"gpm_median":75,"gpm_p75":81,"wks_p25":16.6,"wks_median":33,"wks_p75":51.6,"examples":[{"billed":67500,"actual_hrs":215.3,"budget_hrs":368,"hrs_variance":152.7,"hrs_var_pct":41.5,"gpm":83.1,"name":"Digital Ad Creation + Set Up, Monthly Optimization","client":"MLNV, LLC (Mr. Lid)","wks":53.1},{"billed":52000,"actual_hrs":180,"budget_hrs":212,"hrs_variance":32,"hrs_var_pct":15.1,"gpm":67.7,"name":"Digital Mgmt & Optimization + PM & Strat Oversight","client":"STOR-X Organizing Systems","wks":43.1},{"billed":51200,"actual_hrs":296.5,"budget_hrs":320,"hrs_variance":23.5,"hrs_var_pct":7.3,"gpm":72.2,"name":"Digital Management & Optimization + Project Mgmt","client":"STOR-X Organizing Systems","wks":43.3},{"billed":36835,"actual_hrs":183.8,"budget_hrs":190.2,"hrs_variance":6.5,"hrs_var_pct":3.4,"gpm":71.3,"name":"Digital Optimization & Reporting (2024)","client":"Om Organics","wks":62.6},{"billed":32453,"actual_hrs":173.2,"budget_hrs":162.2,"hrs_variance":-11,"hrs_var_pct":-6.8,"gpm":75.7,"name":"2023 Digital Optimization & Reporting","client":"Om Organics","wks":53.4}]},"Paid Media Plan or Campaign":{"count":23,"dept":"Digital","billed_p10":1102,"billed_p25":2475,"billed_median":5990,"billed_p75":15030,"billed_p90":34092,"budget_hrs_p25":13,"budget_hrs_median":31,"budget_hrs_p75":51,"hrs_var_median":15.3,"pct_over":22,"pct_under":61,"pct_on":17,"n_variance":23,"gpm_p25":64,"gpm_median":75,"gpm_p75":79,"wks_p25":8.3,"wks_median":14.1,"wks_p75":21.1,"examples":[{"billed":131040,"actual_hrs":125.8,"budget_hrs":127,"hrs_variance":1.2,"hrs_var_pct":1,"gpm":22.9,"name":"2024 Sriracha Summer Campaign – Media","client":"Lee Kum Kee (USA), Inc.","wks":12},{"billed":39375,"actual_hrs":118.1,"budget_hrs":139.5,"hrs_variance":21.4,"hrs_var_pct":15.3,"gpm":55.1,"name":"SweeTango 2024 Campaign","client":"Scotian Gold","wks":22.1},{"billed":35965,"actual_hrs":129,"budget_hrs":113,"hrs_variance":-16,"hrs_var_pct":-14.2,"gpm":66.3,"name":"SweeTango Campaign 2023","client":"Scotian Gold","wks":30.3},{"billed":26600,"actual_hrs":1,"budget_hrs":41,"hrs_variance":40,"hrs_var_pct":97.6,"gpm":29.3,"name":"DTC Campaign","client":"Selma LLC","wks":5.4},{"billed":18360,"actual_hrs":30.6,"budget_hrs":56,"hrs_variance":25.4,"hrs_var_pct":45.4,"gpm":73.1,"name":"Paid Media Campaigns – 6 campaigns per brand","client":"NuStef Baking Ltd.","wks":57.4}]},"Owned Media (Email, Blog, Newsletter)":{"count":23,"dept":"Digital","billed_p10":1692,"billed_p25":2930,"billed_median":7500,"billed_p75":13400,"billed_p90":22212,"budget_hrs_p25":11,"budget_hrs_median":30,"budget_hrs_p75":69,"hrs_var_median":0,"pct_over":30,"pct_under":22,"pct_on":48,"n_variance":23,"gpm_p25":60,"gpm_median":72,"gpm_p75":77,"wks_p25":6.2,"wks_median":16.4,"wks_p75":41.4,"examples":[{"billed":30707,"actual_hrs":263,"budget_hrs":183.8,"hrs_variance":-79.2,"hrs_var_pct":-43.1,"gpm":57.2,"name":"Lagostina CRM Program 2023","client":"Groupe SEB","wks":47.6},{"billed":24750,"actual_hrs":126.8,"budget_hrs":150,"hrs_variance":23.2,"hrs_var_pct":15.5,"gpm":74.7,"name":"Automated Emails Copy & Design","client":"Escape Trailer Industries","wks":19.3},{"billed":23940,"actual_hrs":242.8,"budget_hrs":186.2,"hrs_variance":-56.5,"hrs_var_pct":-30.3,"gpm":54.3,"name":"Lagostina CRM Program 2024","client":"Groupe SEB","wks":43.1},{"billed":15300,"actual_hrs":78.8,"budget_hrs":75,"hrs_variance":-3.8,"hrs_var_pct":-5,"gpm":64.5,"name":"Monthly Email Newsletter Creation","client":"Phase 3 AV","wks":40.6},{"billed":13750,"actual_hrs":83,"budget_hrs":83.5,"hrs_variance":0.5,"hrs_var_pct":0.5,"gpm":79.3,"name":"Texas Gold Monthly Newsletter","client":"Texas Gold Shrimp","wks":42.1}]},"Paid Media Support":{"count":10,"dept":"Digital","billed_p10":864,"billed_p25":1390,"billed_median":2000,"billed_p75":4634,"billed_p90":8916,"budget_hrs_p25":5,"budget_hrs_median":9,"budget_hrs_p75":11,"hrs_var_median":0,"pct_over":40,"pct_under":40,"pct_on":20,"n_variance":10,"gpm_p25":63,"gpm_median":70,"gpm_p75":77,"wks_p25":1.9,"wks_median":3.7,"wks_p75":10.6,"examples":[{"billed":30040,"actual_hrs":177.3,"budget_hrs":101,"hrs_variance":-76.3,"hrs_var_pct":-75.6,"gpm":61.7,"name":"Coaching Habit Blended – Paid Media Set Up","client":"Box of Crayons","wks":11.3},{"billed":6570,"actual_hrs":49.8,"budget_hrs":36.5,"hrs_variance":-13.2,"hrs_var_pct":-36.3,"gpm":68.1,"name":"Digital Strategy Plan 2023","client":"ECCO Group of Companies","wks":14.7},{"billed":5424,"actual_hrs":2,"budget_hrs":4,"hrs_variance":2,"hrs_var_pct":50,"gpm":61.9,"name":"2025 SEO Initiatives","client":"AlphaPoly Corporation","wks":47.1},{"billed":2265,"actual_hrs":6.8,"budget_hrs":5.5,"hrs_variance":-1.2,"hrs_var_pct":-22.7,"gpm":38.9,"name":"Kii SEO Sprint","client":"NuStef Baking Ltd.","wks":8.6},{"billed":2200,"actual_hrs":13.8,"budget_hrs":12.2,"hrs_variance":-1.5,"hrs_var_pct":-12.2,"gpm":65.4,"name":"SEO Sprint 1","client":"NuStef Baking Ltd.","wks":3.1}]},"Social Content & Management":{"count":63,"dept":"Social","billed_p10":6265,"billed_p25":15316,"billed_median":26400,"billed_p75":52325,"billed_p90":79335,"budget_hrs_p25":65,"budget_hrs_median":156,"budget_hrs_p75":315,"hrs_var_median":0.6,"pct_over":33,"pct_under":32,"pct_on":35,"n_variance":63,"gpm_p25":59,"gpm_median":73,"gpm_p75":76,"wks_p25":13.4,"wks_median":26.1,"wks_p75":50.7,"examples":[{"billed":100800,"actual_hrs":527.1,"budget_hrs":644,"hrs_variance":116.9,"hrs_var_pct":18.2,"gpm":76.1,"name":"Organic Social Media 2025","client":"NuStef Baking Ltd.","wks":54.6},{"billed":95779,"actual_hrs":1133.7,"budget_hrs":604.4,"hrs_variance":-529.3,"hrs_var_pct":-87.6,"gpm":57.1,"name":"Social Media Management","client":"Farmer Focus","wks":61.1},{"billed":83055,"actual_hrs":243.1,"budget_hrs":569,"hrs_variance":325.9,"hrs_var_pct":57.3,"gpm":85.2,"name":"Social Media Monthly Management","client":"Simply So Foods","wks":57.6},{"billed":82274,"actual_hrs":727.7,"budget_hrs":472.1,"hrs_variance":-255.6,"hrs_var_pct":-54.1,"gpm":54.6,"name":"T-fal Social Media Program 2024","client":"Groupe SEB","wks":51.1},{"billed":82000,"actual_hrs":133.5,"budget_hrs":171.5,"hrs_variance":38,"hrs_var_pct":22.2,"gpm":41.9,"name":"Pick Pork Hub Campaigns","client":"Canada Pork","wks":39}]},"Social Influencer Campaign & Management":{"count":33,"dept":"Social","billed_p10":6025,"billed_p25":8360,"billed_median":11626,"billed_p75":26995,"billed_p90":88780,"budget_hrs_p25":32,"budget_hrs_median":41,"budget_hrs_p75":69,"hrs_var_median":-2.3,"pct_over":45,"pct_under":45,"pct_on":9,"n_variance":33,"gpm_p25":41,"gpm_median":47,"gpm_p75":59,"wks_p25":10.3,"wks_median":14.1,"wks_p75":21.4,"examples":[{"billed":217000,"actual_hrs":467.8,"budget_hrs":699.3,"hrs_variance":231.6,"hrs_var_pct":33.1,"gpm":82.6,"name":"Social Strategy & Monthly Content + Influencer Mgmt","client":"MLNV, LLC (Mr. Lid)","wks":50.6},{"billed":105320,"actual_hrs":89.1,"budget_hrs":150,"hrs_variance":60.9,"hrs_var_pct":40.6,"gpm":33.4,"name":"2024 Sriracha Summer Campaign – Influencer","client":"Lee Kum Kee (USA), Inc.","wks":15.9},{"billed":98122,"actual_hrs":28.2,"budget_hrs":37.5,"hrs_variance":9.2,"hrs_var_pct":24.7,"gpm":24,"name":"Sriracha Chili and Mayo Influencer Execution","client":"Lee Kum Kee (USA), Inc.","wks":10.3},{"billed":91475,"actual_hrs":53.5,"budget_hrs":99,"hrs_variance":45.5,"hrs_var_pct":46,"gpm":52.3,"name":"LKK 2025 Q4 Influencer Campaign","client":"Lee Kum Kee (USA), Inc.","wks":21.4},{"billed":78000,"actual_hrs":186.7,"budget_hrs":112.5,"hrs_variance":-74.2,"hrs_var_pct":-66,"gpm":36.3,"name":"Lindt Beyond Words Influencers Management","client":"Lindt & Sprüngli","wks":27.9}]},"Social Media Audit or Strategy":{"count":13,"dept":"Social","billed_p10":5705,"billed_p25":8000,"billed_median":9000,"billed_p75":12452,"billed_p90":15798,"budget_hrs_p25":43,"budget_hrs_median":44,"budget_hrs_p75":66,"hrs_var_median":1.1,"pct_over":15,"pct_under":38,"pct_on":46,"n_variance":13,"gpm_p25":66,"gpm_median":73,"gpm_p75":78,"wks_p25":6,"wks_median":13,"wks_p75":16.6,"examples":[{"billed":26415,"actual_hrs":155.4,"budget_hrs":145.5,"hrs_variance":-9.9,"hrs_var_pct":-6.8,"gpm":73.3,"name":"Pinterest Audit, Strategy & Quarterly Content Dev","client":"Dairy Farmers of Ontario","wks":30.4},{"billed":16550,"actual_hrs":73.7,"budget_hrs":382.5,"hrs_variance":308.8,"hrs_var_pct":80.7,"gpm":76.2,"name":"Social Strategy & Monthly Content and Management","client":"Fieldless","wks":68},{"billed":12792,"actual_hrs":66,"budget_hrs":66.8,"hrs_variance":0.8,"hrs_var_pct":1.1,"gpm":82.3,"name":"Social – Organic Audit & Strategy","client":"FreshPure Waters","wks":16.6},{"billed":12452,"actual_hrs":80.3,"budget_hrs":80.3,"hrs_variance":0,"hrs_var_pct":0,"gpm":77.7,"name":"Organic Content Audit & Strategy","client":"Farmer Focus","wks":15.9},{"billed":10400,"actual_hrs":30.7,"budget_hrs":36.8,"hrs_variance":6.1,"hrs_var_pct":16.5,"gpm":62.1,"name":"Summer BBQ Hero Moment (Quebec)","client":"Lee Kum Kee (USA), Inc.","wks":24.9}]},"Social Support":{"count":8,"dept":"Social","billed_p10":765,"billed_p25":1012,"billed_median":2117,"billed_p75":3227,"billed_p90":7239,"budget_hrs_p25":5,"budget_hrs_median":11,"budget_hrs_p75":19,"hrs_var_median":-26.8,"pct_over":62,"pct_under":12,"pct_on":25,"n_variance":8,"gpm_p25":58,"gpm_median":65,"gpm_p75":72,"wks_p25":3.6,"wks_median":6.3,"wks_p75":15.5,"examples":[{"billed":13020,"actual_hrs":44.4,"budget_hrs":47.8,"hrs_variance":3.3,"hrs_var_pct":7,"gpm":59.3,"name":"Groupe SEB Social Listening Add-on 2023","client":"Groupe SEB","wks":53.3},{"billed":4761,"actual_hrs":50.2,"budget_hrs":27.5,"hrs_variance":-22.7,"hrs_var_pct":-82.7,"gpm":69.5,"name":"Love Every Bite: TikTok Gifting Campaign","client":"Nature's Path Foods Inc.","wks":12.4},{"billed":2716,"actual_hrs":22.7,"budget_hrs":17,"hrs_variance":-5.7,"hrs_var_pct":-33.5,"gpm":79.4,"name":"Monthly Social Support","client":"Skipper Otto","wks":24.6},{"billed":2600,"actual_hrs":19.3,"budget_hrs":13.2,"hrs_variance":-6.1,"hrs_var_pct":-46,"gpm":48.8,"name":"February Social Media","client":"Phase 3 AV","wks":1},{"billed":1635,"actual_hrs":7.5,"budget_hrs":9.5,"hrs_variance":2,"hrs_var_pct":21.1,"gpm":79.9,"name":"Social Media Transition","client":"Cavallo Winery","wks":0.6}]},"Video Production":{"count":49,"dept":"Studios","billed_p10":2879,"billed_p25":7830,"billed_median":17960,"billed_p75":70750,"billed_p90":112679,"budget_hrs_p25":28,"budget_hrs_median":65,"budget_hrs_p75":115,"hrs_var_median":-6.2,"pct_over":45,"pct_under":18,"pct_on":37,"n_variance":49,"gpm_p25":27,"gpm_median":42,"gpm_p75":56,"wks_p25":7.3,"wks_median":9.6,"wks_p75":15,"examples":[{"billed":415193,"actual_hrs":179,"budget_hrs":105,"hrs_variance":-74,"hrs_var_pct":-70.5,"gpm":18.2,"name":"Video Production","client":"Panago Pizza Inc.","wks":6.7},{"billed":139985,"actual_hrs":248.2,"budget_hrs":177,"hrs_variance":-71.2,"hrs_var_pct":-40.3,"gpm":23.6,"name":"PAM Video Production","client":"Conagra Brands Canada Inc.","wks":22.3},{"billed":136735,"actual_hrs":201.8,"budget_hrs":210,"hrs_variance":8.2,"hrs_var_pct":3.9,"gpm":30.7,"name":"Hero Interview Series Phase 2","client":"Trinity Western University","wks":24.4},{"billed":130870,"actual_hrs":474.9,"budget_hrs":205,"hrs_variance":-269.9,"hrs_var_pct":-131.6,"gpm":20,"name":"Chopped Leaf TV Spot Spring 2023","client":"Innovative Food Brands","wks":13.4},{"billed":120876,"actual_hrs":313,"budget_hrs":245,"hrs_variance":-68,"hrs_var_pct":-27.7,"gpm":27,"name":"Video Production – Almond, Quebec, Oat","client":"Earth's Own","wks":13.3}]},"Photography":{"count":30,"dept":"Studios","billed_p10":2481,"billed_p25":4910,"billed_median":12702,"billed_p75":23160,"billed_p90":85432,"budget_hrs_p25":19,"budget_hrs_median":35,"budget_hrs_p75":54,"hrs_var_median":-0.4,"pct_over":30,"pct_under":17,"pct_on":53,"n_variance":30,"gpm_p25":35,"gpm_median":38,"gpm_p75":60,"wks_p25":4.5,"wks_median":8.8,"wks_p75":10.3,"examples":[{"billed":161580,"actual_hrs":193.8,"budget_hrs":201,"hrs_variance":7.2,"hrs_var_pct":3.6,"gpm":31.1,"name":"Video and Photography Shoot Production","client":"Escape Trailer Industries","wks":11},{"billed":148550,"actual_hrs":303,"budget_hrs":250,"hrs_variance":-53,"hrs_var_pct":-21.2,"gpm":27.1,"name":"Photography | Lifestyle + Product","client":"Panago Pizza Inc.","wks":6},{"billed":89995,"actual_hrs":131.8,"budget_hrs":144,"hrs_variance":12.2,"hrs_var_pct":8.5,"gpm":35.9,"name":"Snacks Photography","client":"SunRype / A. Lassonde","wks":30.1},{"billed":84925,"actual_hrs":159,"budget_hrs":160,"hrs_variance":1,"hrs_var_pct":0.6,"gpm":35.6,"name":"Q1 Promo | Lifestyle & eComm Photoshoot","client":"Panago Pizza Inc.","wks":7.4},{"billed":49400,"actual_hrs":86,"budget_hrs":95,"hrs_variance":9,"hrs_var_pct":9.5,"gpm":32.5,"name":"Q2 Photography","client":"Panago Pizza Inc.","wks":9.3}]},"Radio Spot":{"count":3,"dept":"Studios","billed_p10":9564,"billed_p25":10327,"billed_median":11600,"billed_p75":13300,"billed_p90":14320,"budget_hrs_p25":19,"budget_hrs_median":22,"budget_hrs_p75":24,"hrs_var_median":-54.7,"pct_over":67,"pct_under":33,"pct_on":0,"n_variance":3,"gpm_p25":25,"gpm_median":34,"gpm_p75":42,"wks_p25":6.3,"wks_median":7,"wks_p75":7.2,"examples":[{"billed":15000,"actual_hrs":39.2,"budget_hrs":22,"hrs_variance":-17.2,"hrs_var_pct":-78.4,"gpm":15.4,"name":"Chopped Leaf Radio Campaign","client":"Innovative Food Brands","wks":5.6},{"billed":11600,"actual_hrs":24.8,"budget_hrs":16,"hrs_variance":-8.8,"hrs_var_pct":-54.7,"gpm":33.9,"name":"Make Happy Tummies – English Master Radio Spots","client":"The Grocery Foundation","wks":7},{"billed":9055,"actual_hrs":18.5,"budget_hrs":26,"hrs_variance":7.5,"hrs_var_pct":28.8,"gpm":50,"name":"Campaign Radio Production: Be The Light","client":"Trinity Western University","wks":7.4}]},"Studio Support":{"count":6,"dept":"Studios","billed_p10":935,"billed_p25":1091,"billed_median":1777,"billed_p75":2193,"billed_p90":4432,"budget_hrs_p25":5,"budget_hrs_median":6,"budget_hrs_p75":11,"hrs_var_median":0,"pct_over":33,"pct_under":33,"pct_on":33,"n_variance":6,"gpm_p25":59,"gpm_median":66,"gpm_p75":77,"wks_p25":1.9,"wks_median":3.2,"wks_p75":6.2,"examples":[{"billed":6660,"actual_hrs":22.8,"budget_hrs":37,"hrs_variance":14.2,"hrs_var_pct":38.5,"gpm":79.1,"name":"Photography Pre-Production Support","client":"Highline Mushrooms","wks":8.3},{"billed":2205,"actual_hrs":19.2,"budget_hrs":12.2,"hrs_variance":-7,"hrs_var_pct":-57.1,"gpm":58.7,"name":"\"Bam\" Animation / Motion Graphics","client":"MAH Group","wks":2.6},{"billed":2160,"actual_hrs":3,"budget_hrs":4,"hrs_variance":1,"hrs_var_pct":25,"gpm":54.9,"name":"Animation of Canadian Social Posts","client":"Snowcrest Foods Ltd.","wks":1.6},{"billed":1395,"actual_hrs":7.2,"budget_hrs":7.2,"hrs_variance":0,"hrs_var_pct":0,"gpm":73.1,"name":"Spidey Sizzle 2025 Revisions","client":"Jazwares","wks":3.7},{"billed":990,"actual_hrs":6.3,"budget_hrs":5.5,"hrs_variance":-0.8,"hrs_var_pct":-13.8,"gpm":78.5,"name":"Roblox Sizzle Updates 2024","client":"Jazwares","wks":1.7}]},"Web Design & Build":{"count":28,"dept":"Web","billed_p10":8791,"billed_p25":15078,"billed_median":27981,"billed_p75":39360,"billed_p90":82222,"budget_hrs_p25":55,"budget_hrs_median":108,"budget_hrs_p75":212,"hrs_var_median":-14.2,"pct_over":61,"pct_under":18,"pct_on":21,"n_variance":28,"gpm_p25":50,"gpm_median":58,"gpm_p75":66,"wks_p25":16.7,"wks_median":24.5,"wks_p75":35.9,"examples":[{"billed":224125,"actual_hrs":1228.9,"budget_hrs":1321.2,"hrs_variance":92.3,"hrs_var_pct":7,"gpm":75.3,"name":"Website Strategy / Design / Content / SEO","client":"United Natural Foods, Inc.","wks":54},{"billed":99870,"actual_hrs":444.2,"budget_hrs":382,"hrs_variance":-62.2,"hrs_var_pct":-16.3,"gpm":50.2,"name":"Custom WordPress Website","client":"Nature's Touch Frozen Foods Inc.","wks":42.6},{"billed":99540,"actual_hrs":908.8,"budget_hrs":433,"hrs_variance":-475.8,"hrs_var_pct":-109.9,"gpm":47.7,"name":"Box of Crayons – Web Strategy & Build","client":"Box of Crayons","wks":26.6},{"billed":74800,"actual_hrs":654.8,"budget_hrs":420,"hrs_variance":-234.8,"hrs_var_pct":-55.9,"gpm":45,"name":"New Website Strategy + Design + Build","client":"Skipper Otto","wks":33.7},{"billed":69310,"actual_hrs":647.5,"budget_hrs":452.5,"hrs_variance":-195,"hrs_var_pct":-43.1,"gpm":54.1,"name":"Website Production (Build)","client":"4Refuel Canada LP","wks":24.6}]},"Website Refresh":{"count":11,"dept":"Web","billed_p10":9690,"billed_p25":10735,"billed_median":14940,"billed_p75":19862,"billed_p90":28080,"budget_hrs_p25":40,"budget_hrs_median":59,"budget_hrs_p75":75,"hrs_var_median":-88,"pct_over":82,"pct_under":9,"pct_on":9,"n_variance":11,"gpm_p25":34,"gpm_median":47,"gpm_p75":60,"wks_p25":10.7,"wks_median":17.4,"wks_p75":27.5,"examples":[{"billed":64125,"actual_hrs":330.8,"budget_hrs":174.5,"hrs_variance":-156.2,"hrs_var_pct":-89.5,"gpm":36.3,"name":"Website Refresh & Maintenance","client":"Escape Trailer Industries","wks":47.4},{"billed":28080,"actual_hrs":130.8,"budget_hrs":59,"hrs_variance":-71.8,"hrs_var_pct":-121.8,"gpm":57.1,"name":"AlphaPoly Website Refresh","client":"AlphaPoly Corporation","wks":29.4},{"billed":19920,"actual_hrs":81.8,"budget_hrs":71.6,"hrs_variance":-10.2,"hrs_var_pct":-14.2,"gpm":46.5,"name":"Website Refresh","client":"Gillespie & Company LLP","wks":25.6},{"billed":19805,"actual_hrs":153.2,"budget_hrs":81.5,"hrs_variance":-71.8,"hrs_var_pct":-88,"gpm":44.2,"name":"Hardbite Website Refresh + Shopify Buy Now","client":"Naturally Homegrown Foods Ltd.","wks":13.1},{"billed":15000,"actual_hrs":100.1,"budget_hrs":43.8,"hrs_variance":-56.3,"hrs_var_pct":-128.4,"gpm":27.9,"name":"Shopify Reskin","client":"MLNV, LLC (Mr. Lid)","wks":9.4}]},"Web Maintenance":{"count":39,"dept":"Web","billed_p10":1314,"billed_p25":1605,"billed_median":3060,"billed_p75":4515,"billed_p90":7979,"budget_hrs_p25":10,"budget_hrs_median":15,"budget_hrs_p75":24,"hrs_var_median":6.1,"pct_over":26,"pct_under":46,"pct_on":28,"n_variance":39,"gpm_p25":65,"gpm_median":70,"gpm_p75":77,"wks_p25":26.7,"wks_median":49.4,"wks_p75":52.2,"examples":[{"billed":25860,"actual_hrs":171.6,"budget_hrs":143.4,"hrs_variance":-28.2,"hrs_var_pct":-19.7,"gpm":56.6,"name":"Serenia Life Website Retainer 2024","client":"Serenia Life Financial","wks":46.4},{"billed":20220,"actual_hrs":79.8,"budget_hrs":94.5,"hrs_variance":14.8,"hrs_var_pct":15.6,"gpm":69.7,"name":"Nustef 2025 Web Maintenance + Updates","client":"NuStef Baking Ltd.","wks":49},{"billed":9300,"actual_hrs":48.2,"budget_hrs":24.5,"hrs_variance":-23.8,"hrs_var_pct":-96.9,"gpm":65.4,"name":"Web PMP, SEO & Light Updates","client":"NuStef Baking Ltd.","wks":29.1},{"billed":8760,"actual_hrs":56.3,"budget_hrs":43.2,"hrs_variance":-13.1,"hrs_var_pct":-30.3,"gpm":61.2,"name":"IFB – PMP Jan & May 2024","client":"Innovative Food Brands","wks":79.3},{"billed":7784,"actual_hrs":23,"budget_hrs":43.2,"hrs_variance":20.2,"hrs_var_pct":46.8,"gpm":84.9,"name":"Monthly Web Maintenance Retainer 2023","client":"ECCO Group of Companies","wks":13.1}]},"Web Updates & Support":{"count":70,"dept":"Web","billed_p10":670,"billed_p25":1001,"billed_median":2107,"billed_p75":4781,"billed_p90":7816,"budget_hrs_p25":4,"budget_hrs_median":10,"budget_hrs_p75":22,"hrs_var_median":0,"pct_over":29,"pct_under":20,"pct_on":51,"n_variance":70,"gpm_p25":59,"gpm_median":66,"gpm_p75":71,"wks_p25":1.7,"wks_median":3.3,"wks_p75":8.8,"examples":[{"billed":22190,"actual_hrs":126,"budget_hrs":133,"hrs_variance":7,"hrs_var_pct":5.3,"gpm":72.1,"name":"Web Requests","client":"Farmer Focus","wks":43.1},{"billed":20435,"actual_hrs":84.3,"budget_hrs":82,"hrs_variance":-2.3,"hrs_var_pct":-2.9,"gpm":64.9,"name":"Texas Gold Web Updates","client":"Texas Gold Shrimp","wks":43.6},{"billed":15255,"actual_hrs":88.6,"budget_hrs":88.6,"hrs_variance":0,"hrs_var_pct":0,"gpm":15.6,"name":"Shopify Website – 3 Pages","client":"Active Humans","wks":8},{"billed":13140,"actual_hrs":37.8,"budget_hrs":26,"hrs_variance":-11.8,"hrs_var_pct":-45.2,"gpm":73.4,"name":"Website Phase 2","client":"High Desert Vodka","wks":21.9},{"billed":12763,"actual_hrs":36.8,"budget_hrs":40.2,"hrs_variance":3.5,"hrs_var_pct":8.7,"gpm":57.5,"name":"Website One-pager","client":"Freedom CNG","wks":6.9}]},"Web Audit or Strategy":{"count":3,"dept":"Web","billed_p10":2174,"billed_p25":3515,"billed_median":5750,"billed_p75":12600,"billed_p90":16710,"budget_hrs_p25":21,"budget_hrs_median":35,"budget_hrs_p75":66,"hrs_var_median":0,"pct_over":33,"pct_under":0,"pct_on":67,"n_variance":3,"gpm_p25":65,"gpm_median":69,"gpm_p75":70,"wks_p25":7.6,"wks_median":11.9,"wks_p75":16.5,"examples":[{"billed":19450,"actual_hrs":92,"budget_hrs":97,"hrs_variance":5,"hrs_var_pct":5.2,"gpm":68.9,"name":"Website Strategy","client":"Pentecostal Assemblies of Canada","wks":21.1},{"billed":5750,"actual_hrs":39.2,"budget_hrs":35,"hrs_variance":-4.2,"hrs_var_pct":-12.1,"gpm":71.9,"name":"Texas Gold Web & Digital Audit","client":"Texas Gold Shrimp","wks":3.3},{"billed":1280,"actual_hrs":8,"budget_hrs":8,"hrs_variance":0,"hrs_var_pct":0,"gpm":60.6,"name":"Website Strategy – Discovery Phase","client":"Skipper Otto","wks":11.9}]}};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+const fmt = n => '$' + Math.round(n).toLocaleString('en-CA');
+const fmtW = n => n < 1 ? '< 1 wk' : Math.round(n) + ' wk' + (Math.round(n) === 1 ? '' : 's');
+const fmtH = n => n != null ? Math.round(n) + ' hrs' : '—';
+const gpmCls = g => g >= 65 ? 'gpm-hi' : g >= 45 ? 'gpm-med' : 'gpm-lo';
+
+function varClass(pct) {
+  if (pct == null) return 'var-on';
+  if (pct < -10) return 'var-over';
+  if (pct > 10) return 'var-under';
+  return 'var-on';
+}
+function varLabel(pct) {
+  if (pct == null) return '—';
+  const sign = pct > 0 ? '+' : '';
+  return sign + Math.round(pct) + '%';
+}
+
+// scoping health: pct_over = went over hours, pct_under = came in under
+function scopeHealthLabel(v) {
+  if (v.pct_over == null) return '';
+  if (v.pct_over >= 60) return 'Frequently underscoped';
+  if (v.pct_over >= 35) return 'Often underscoped';
+  if (v.pct_under >= 55) return 'Tends to come in under';
+  return 'Generally well-scoped';
+}
+function scopeHealthColor(v) {
+  if (v.pct_over == null) return 'var(--text3)';
+  if (v.pct_over >= 60) return 'var(--over-color)';
+  if (v.pct_over >= 35) return 'var(--amber)';
+  if (v.pct_under >= 55) return 'var(--under-color)';
+  return 'var(--on-color)';
+}
+
+function plainHealthText(v) {
+  const n = v.n_variance;
+  const over = v.pct_over;
+  const under = v.pct_under;
+  const on = v.pct_on;
+  const med = v.hrs_var_median;
+
+  let lines = [];
+  if (over != null) {
+    if (over >= 50) lines.push(`<strong>Went over hours on ${over}% of projects</strong> — this service type is frequently underscoped.`);
+    else if (over >= 30) lines.push(`Went over hours on <strong>${over}%</strong> of projects — consider adding a buffer when scoping.`);
+    else lines.push(`Went over hours on <strong>${over}%</strong> of projects.`);
+  }
+  if (under != null && under >= 40) lines.push(`Came in under budget hours on <strong>${under}%</strong> — there may be room to tighten the scope.`);
+  if (on != null && on >= 40) lines.push(`<strong>${on}%</strong> of projects landed within 10% of scoped hours — strong scoping accuracy.`);
+  if (med != null) {
+    const abs = Math.abs(med);
+    if (med < -15) lines.push(`Median hours variance: <strong>${Math.round(med)}%</strong> — projects typically run over by this amount.`);
+    else if (med > 15) lines.push(`Median hours variance: <strong>+${Math.round(med)}%</strong> — projects typically come in under by this amount.`);
+  }
+  if (lines.length === 0) lines.push(`Based on ${n} projects with hour tracking.`);
+  return lines.join(' ');
+}
+
+// PDF links stored in localStorage
+function getLinks() { try { return JSON.parse(localStorage.getItem('crew_pdfs')||'{}'); } catch(e) { return {}; } }
+function setLink(k,u) { const l=getLinks(); l[k]=u; localStorage.setItem('crew_pdfs',JSON.stringify(l)); }
+function delLink(k) { const l=getLinks(); delete l[k]; localStorage.setItem('crew_pdfs',JSON.stringify(l)); }
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const DEPTS = ['All', ...new Set(Object.values(DATA).map(d=>d.dept))];
+let dept = 'All', selKey = null;
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+  const q = document.getElementById('q').value.toLowerCase();
+
+  document.getElementById('tabs').innerHTML = DEPTS.map(d =>
+    `<button class="tab${d===dept?' on':''}" onclick="setDept('${d}')">${d}</button>`
+  ).join('');
+
+  const items = Object.entries(DATA).filter(([k,v]) => {
+    const dOk = dept === 'All' || v.dept === dept;
+    const qOk = !q || k.toLowerCase().includes(q) || v.dept.toLowerCase().includes(q);
+    return dOk && qOk;
+  });
+
+  document.getElementById('rc').textContent = items.length + ' service types';
+
+  document.getElementById('grid').innerHTML = items.length === 0
+    ? '<div class="empty">No service types match your search.</div>'
+    : items.map(([k,v]) => {
+        const over = v.pct_over ?? 0;
+        const on_ = v.pct_on ?? 0;
+        const under = v.pct_under ?? 0;
+        const health = scopeHealthLabel(v);
+        const hColor = scopeHealthColor(v);
+        return `
+        <div class="card${selKey===k?' sel':''}" onclick="pick('${k.replace(/'/g,"\\'")}')">
+          <div class="cdept">${v.dept}</div>
+          <div class="cname">${k}</div>
+          <div class="cprice">${fmt(v.billed_median)}</div>
+          <div class="cprice-label">median scoped value</div>
+          <div class="crange">Typical range: ${fmt(v.billed_p25)} – ${fmt(v.billed_p75)}</div>
+          <div class="chips">
+            <span class="chip">${fmtW(v.wks_p25)}–${fmtW(v.wks_p75)}</span>
+            <span class="chip">~${fmtH(v.budget_hrs_median)} scoped</span>
+            <span class="chip gpm-badge ${gpmCls(v.gpm_median)}">${v.gpm_median}% GPM</span>
+          </div>
+          <div class="scope-card">
+            <div class="scope-label" style="color:${hColor}">${health}</div>
+            <div class="scope-bar-wrap">
+              <div class="scope-seg seg-over" style="width:${over}%"></div>
+              <div class="scope-seg seg-on" style="width:${on_}%"></div>
+              <div class="scope-seg seg-under" style="width:${under}%"></div>
+            </div>
+            <div class="scope-legend">
+              <span class="sl"><span class="sl-dot" style="background:var(--over-color)"></span>${over}% over</span>
+              <span class="sl"><span class="sl-dot" style="background:#A8C5A0"></span>${on_}% on target</span>
+              <span class="sl"><span class="sl-dot" style="background:var(--under-color)"></span>${under}% under</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+  if (selKey) renderDetail(selKey);
+}
+
+function setDept(d) { dept=d; selKey=null; document.getElementById('det').classList.remove('open'); render(); }
+
+function pick(k) {
+  selKey = k; render();
+  renderDetail(k);
+  setTimeout(()=>document.getElementById('det').scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+
+function renderDetail(k) {
+  const v = DATA[k];
+  if (!v) return;
+  const panel = document.getElementById('det');
+  panel.classList.add('open');
+  const links = getLinks();
+  const maxV = v.billed_p90;
+
+  function barPct(lo,hi) {
+    return { l: Math.round(lo/maxV*100), w: Math.round((hi-lo)/maxV*100) };
+  }
+
+  const ranges = [
+    {lbl:'Low end',lo:v.billed_p10,hi:v.billed_p25,cls:'bar-outer'},
+    {lbl:'Typical',lo:v.billed_p25,hi:v.billed_p75,cls:'bar-inner'},
+    {lbl:'High end',lo:v.billed_p75,hi:v.billed_p90,cls:'bar-outer'},
+  ];
+
+  panel.innerHTML = `
+    <div class="dhead">
+      <div class="dhead-left">
+        <div class="dtag">${v.dept}</div>
+        <div class="dtitle">${k}</div>
+        <div class="dcount">${v.count} completed projects · hours tracked on ${v.n_variance}</div>
+      </div>
+      <button class="dclose" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="dbody">
+
+      <div class="stats">
+        <div class="sbox">
+          <div class="slbl">Median scope value</div>
+          <div class="sval">${fmt(v.billed_median)}</div>
+          <div class="ssub">what we billed</div>
+        </div>
+        <div class="sbox">
+          <div class="slbl">Typical range</div>
+          <div class="sval" style="font-size:15px">${fmt(v.billed_p25)} – ${fmt(v.billed_p75)}</div>
+          <div class="ssub">middle 50% of projects</div>
+        </div>
+        <div class="sbox">
+          <div class="slbl">Scoped hours</div>
+          <div class="sval" style="font-size:15px">${fmtH(v.budget_hrs_p25)}–${fmtH(v.budget_hrs_p75)}</div>
+          <div class="ssub">median ${fmtH(v.budget_hrs_median)}</div>
+        </div>
+        <div class="sbox">
+          <div class="slbl">Timeline</div>
+          <div class="sval" style="font-size:15px">${fmtW(v.wks_p25)}–${fmtW(v.wks_p75)}</div>
+          <div class="ssub">median ${fmtW(v.wks_median)}</div>
+        </div>
+        <div class="sbox">
+          <div class="slbl">Median GPM</div>
+          <div class="sval ${gpmCls(v.gpm_median)}">${v.gpm_median}%</div>
+          <div class="ssub">p25 ${v.gpm_p25}% / p75 ${v.gpm_p75}%</div>
+        </div>
+      </div>
+
+      <div class="health-block">
+        <div class="sec-head">Scoping health — hours variance across ${v.n_variance} projects</div>
+        <div class="health-gauge">
+          <div class="hg-seg seg-over" style="width:${v.pct_over??0}%"></div>
+          <div class="hg-seg seg-on" style="width:${v.pct_on??0}%"></div>
+          <div class="hg-seg seg-under" style="width:${v.pct_under??0}%"></div>
+        </div>
+        <div class="health-row">
+          <span class="health-pill hp-over">▲ Went over hours: ${v.pct_over??0}%</span>
+          <span class="health-pill hp-on">◆ On target (±10%): ${v.pct_on??0}%</span>
+          <span class="health-pill hp-under">▼ Came in under: ${v.pct_under??0}%</span>
+        </div>
+        <div class="health-plain">${plainHealthText(v)}</div>
+      </div>
+
+      <div class="dist-block">
+        <div class="sec-head">Price distribution (billed)</div>
+        ${ranges.map(r => {
+          const p = barPct(r.lo,r.hi);
+          return `<div class="dist-row">
+            <div class="dist-lbl">${r.lbl}</div>
+            <div class="dist-track"><div class="dist-bar ${r.cls}" style="left:0;width:${p.l+p.w}%"></div></div>
+            <div class="dist-val">${fmt(r.lo)} – ${fmt(r.hi)}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="sec-head">Recent examples</div>
+      <table class="ex-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th class="r">Billed</th>
+            <th class="r">Budget hrs</th>
+            <th class="r">Actual hrs</th>
+            <th class="r">Hrs variance</th>
+            <th class="r">GPM</th>
+            <th class="r">Outputs</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${v.examples.map((e,i) => {
+            const key = k+'__'+i;
+            const pdfUrl = links[key];
+            const varPct = e.hrs_var_pct;
+            return `<tr>
+              <td>
+                <div class="ex-name" title="${e.name}">${e.name}</div>
+                <div class="ex-client">${e.client} · ${fmtW(e.wks)}</div>
+              </td>
+              <td class="r"><span class="ex-amt">${fmt(e.billed)}</span></td>
+              <td class="r">${fmtH(e.budget_hrs)}</td>
+              <td class="r">${fmtH(e.actual_hrs)}</td>
+              <td class="r"><span class="var-pill ${varClass(varPct)}">${varLabel(varPct)}</span></td>
+              <td class="r"><span class="gpm-badge ${gpmCls(e.gpm)}">${e.gpm != null ? e.gpm+'%' : '—'}</span></td>
+              <td class="r">
+                <div class="btn-row">
+                  ${pdfUrl
+                    ? `<a href="${pdfUrl}" target="_blank" class="btn">View PDF</a>
+                       <button class="btn" onclick="delPdf('${key}','${k.replace(/'/g,"\\'")}')">✕</button>`
+                    : `<button class="btn" onclick="addPdf('${key}','${k.replace(/'/g,"\\'")}')">+ PDF</button>`
+                  }
+                  <a href="${SP}" target="_blank" class="btn btn-sp">Browse outputs</a>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+
+      <div class="dnote">Price = Current Total Budget (what was scoped/billed). Hours variance = actual vs. scoped hours; negative = went over, positive = came in under. GPM based on actual labour costs — more reliable than Actual Gross Total. Prices in CAD unless noted. Based on completed projects with hour tracking only.</div>
+    </div>`;
+}
+
+function closeDetail() { selKey=null; document.getElementById('det').classList.remove('open'); render(); }
+function addPdf(key,k) {
+  const u = prompt('Paste the link to the output PDF (SharePoint, Teams, or any URL):');
+  if (u && u.trim()) { setLink(key,u.trim()); renderDetail(k); }
+}
+function delPdf(key,k) { delLink(key); renderDetail(k); }
+
+render();
+</script>
+</body>
+</html>

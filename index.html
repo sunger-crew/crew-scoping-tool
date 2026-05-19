@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Crew Scoping Tool</title>
 <style>
+  .sitenav{background:var(--black);height:60px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .nav-logo{display:flex;align-items:center;gap:14px}
+  .nav-name{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+  .nav-div{width:1px;height:18px;background:rgba(255,255,255,.2)}
+  .nav-links{display:flex;gap:2px}
+  .nav-link{padding:6px 14px;border-radius:2px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);text-decoration:none;transition:all .12s;border:1px solid transparent}
+  .nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
+  .nav-link.active{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.15)}
+  .nav-right{font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.03em}
+
 :root {
   --black: #111110;
   --white: #FFFFFF;
@@ -175,14 +185,24 @@ html{scroll-behavior:smooth}
 </head>
 <body>
 
-<header>
+<nav class="sitenav">
+  <div class="nav-logo">
+    <div class="nav-name">Crew</div>
+    <div class="nav-div"></div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Scoping Tool</a>
+      <a href="projects.html" class="nav-link">Project Database</a>
+    </div>
+  </div>
+  <div class="nav-right">Internal use only</div>
+</nav>
   <div class="logo">
     <div class="logo-name">Crew</div>
     <div class="logo-div"></div>
     <div class="logo-sub">Project Scoping Tool</div>
   </div>
   <div class="header-right">979 projects &nbsp;·&nbsp; 35 service types &nbsp;·&nbsp; Internal use only</div>
-</header>
+
 
 <div class="shell">
   <div class="intro">

@@ -250,6 +250,10 @@ function hl(text, q) {
 function getLinks() { try { return JSON.parse(localStorage.getItem('crew_proj_pdfs')||'{}'); } catch(e){ return {}; } }
 function setLink(id,u) { const l=getLinks(); l[id]=u; localStorage.setItem('crew_proj_pdfs',JSON.stringify(l)); }
 function delLink(id) { const l=getLinks(); delete l[id]; localStorage.setItem('crew_proj_pdfs',JSON.stringify(l)); }
+function projKey(p) {
+  // Stable key based on project content — not position in list
+  return 'p_' + (p.client + '__' + p.name).replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 80);
+}
 
 // Populate subtype dropdown
 function populateSubtypes() {
@@ -338,7 +342,8 @@ function render() {
       const globalIdx = start + i;
       const isOpen = openIdx === globalIdx;
       const links = getLinks();
-      const pdfUrl = links['proj_'+globalIdx];
+      const stableKey = projKey(p);
+      const pdfUrl = links[stableKey];
       const varP = p.hrs_var_pct;
 
       return `
@@ -356,7 +361,7 @@ function render() {
           <div class="proj-gpm">${p.gpm!=null ? `<span class="gpm-badge ${gpmCls(p.gpm)}">${p.gpm}%</span>` : '<span style="color:var(--text3);font-size:11px">—</span>'}</div>
         </div>
         <div class="proj-detail">
-          ${renderDetail(p, globalIdx, pdfUrl, q)}
+          ${renderDetail(p, globalIdx, pdfUrl, q, projKey(p))}
         </div>
       </div>`;
     }).join('');
@@ -366,7 +371,8 @@ function render() {
   renderPager(totalPages);
 }
 
-function renderDetail(p, idx, pdfUrl, q) {
+function renderDetail(p, idx, pdfUrl, q, stableKey) {
+  // pdfUrl is already resolved before calling — idx kept for compat only
   const varP = p.hrs_var_pct;
   let hoursHtml = '';
   if (p.budget_hrs != null || p.actual_hrs != null) {
@@ -407,8 +413,8 @@ function renderDetail(p, idx, pdfUrl, q) {
     <div class="detail-actions">
       ${pdfUrl
         ? `<a href="${pdfUrl}" target="_blank" class="act-btn has-pdf">View output PDF</a>
-           <button class="act-btn-remove" onclick="removePdf(${idx}, event)">Remove PDF</button>`
-        : `<button class="act-btn" onclick="addPdf(${idx}, event)">+ Attach output PDF</button>`
+           <button class="act-btn-remove" onclick="removePdf('${projKey(p)}', event)">Remove PDF</button>`
+        : `<button class="act-btn" onclick="addPdf('${projKey(p)}', event)">+ Attach output PDF</button>`
       }
       <a href="${SP}" target="_blank" class="act-btn sp">Browse all outputs in SharePoint</a>
     </div>`;
@@ -453,15 +459,15 @@ function goPage(p) {
   window.scrollTo({top: document.querySelector('.results-meta').offsetTop - 80, behavior:'smooth'});
 }
 
-function addPdf(idx, e) {
+function addPdf(key, e) {
   e.stopPropagation();
   const url = prompt('Paste the link to the output PDF for this project:');
-  if (url && url.trim()) { setLink('proj_'+idx, url.trim()); render(); }
+  if (url && url.trim()) { setLink(key, url.trim()); render(); }
 }
 
-function removePdf(idx, e) {
+function removePdf(key, e) {
   e.stopPropagation();
-  delLink('proj_'+idx);
+  delLink(key);
   render();
 }
 

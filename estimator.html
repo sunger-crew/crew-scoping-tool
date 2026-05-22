@@ -108,9 +108,10 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:v
 .hard-costs{background:#fff;border:1px solid var(--border)}
 .hc-row{display:flex;gap:6px;align-items:center;padding:7px 1.25rem;border-bottom:1px solid var(--border);font-size:12px}
 .hc-row:last-child{border-bottom:none}
-.hc-desc{flex:1;background:none;border:none;font-family:inherit;font-size:12px;color:var(--black);outline:none;padding:2px 0}
+.hc-desc{flex:1;background:none;border:none;font-family:inherit;font-size:12px;color:var(--black);outline:none;padding:2px 0;cursor:pointer}
 .hc-desc::placeholder{color:var(--t3)}
 .hc-desc:focus{border-bottom:1px solid var(--bs)}
+.hc-desc option{background:#fff}
 .hc-num{width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none}
 .hc-num:focus{border-color:var(--black)}
 .hc-total{width:72px;font-size:11px;color:var(--t3);text-align:right}
@@ -771,8 +772,50 @@ function renderHardCosts() {
   }
   wrap.innerHTML = hardCosts.map((hc, i) => `
     <div class="hc-row">
-      <input class="hc-desc" value="${esc(hc.desc)}" placeholder="Description"
-        oninput="hardCosts[${i}].desc=this.value">
+      <select class="hc-desc" onchange="hardCosts[${i}].desc=this.value==='__custom__'?prompt('Enter description:')||this.value:this.value;renderHardCosts();updateSummary()">
+        <option value="">— Select type —</option>
+        <option value="Animation Studios Production" ${hc.desc==='Animation Studios Production'?'selected':''}>Animation Studios Production</option>
+        <option value="Art Direction" ${hc.desc==='Art Direction'?'selected':''}>Art Direction</option>
+        <option value="Copywriting" ${hc.desc==='Copywriting'?'selected':''}>Copywriting</option>
+        <option value="Design" ${hc.desc==='Design'?'selected':''}>Design</option>
+        <option value="Digital Strategy" ${hc.desc==='Digital Strategy'?'selected':''}>Digital Strategy</option>
+        <option value="Director" ${hc.desc==='Director'?'selected':''}>Director</option>
+        <option value="Director of Photography" ${hc.desc==='Director of Photography'?'selected':''}>Director of Photography</option>
+        <option value="Editing - Offline" ${hc.desc==='Editing - Offline'?'selected':''}>Editing - Offline</option>
+        <option value="Editing - Online/Colour" ${hc.desc==='Editing - Online/Colour'?'selected':''}>Editing - Online/Colour</option>
+        <option value="Equipment Rentals" ${hc.desc==='Equipment Rentals'?'selected':''}>Equipment Rentals</option>
+        <option value="Food Stylist" ${hc.desc==='Food Stylist'?'selected':''}>Food Stylist</option>
+        <option value="Fractional Marketing" ${hc.desc==='Fractional Marketing'?'selected':''}>Fractional Marketing</option>
+        <option value="Hair and Makeup" ${hc.desc==='Hair and Makeup'?'selected':''}>Hair and Makeup</option>
+        <option value="Influencer" ${hc.desc==='Influencer'?'selected':''}>Influencer</option>
+        <option value="Insurance" ${hc.desc==='Insurance'?'selected':''}>Insurance</option>
+        <option value="Location Sound" ${hc.desc==='Location Sound'?'selected':''}>Location Sound</option>
+        <option value="Marketing Research" ${hc.desc==='Marketing Research'?'selected':''}>Marketing Research</option>
+        <option value="Marketing Strategy &amp; Client Leadership" ${hc.desc==='Marketing Strategy & Client Leadership'?'selected':''}>Marketing Strategy &amp; Client Leadership</option>
+        <option value="Miscellaneous Studios Production" ${hc.desc==='Miscellaneous Studios Production'?'selected':''}>Miscellaneous Studios Production</option>
+        <option value="Other Crew (i.e. grip)" ${hc.desc==='Other Crew (i.e. grip)'?'selected':''}>Other Crew (i.e. grip)</option>
+        <option value="Paid Media Specialist" ${hc.desc==='Paid Media Specialist'?'selected':''}>Paid Media Specialist</option>
+        <option value="Photography" ${hc.desc==='Photography'?'selected':''}>Photography</option>
+        <option value="Print Retouching" ${hc.desc==='Print Retouching'?'selected':''}>Print Retouching</option>
+        <option value="Printing" ${hc.desc==='Printing'?'selected':''}>Printing</option>
+        <option value="Producer" ${hc.desc==='Producer'?'selected':''}>Producer</option>
+        <option value="Production Assistant" ${hc.desc==='Production Assistant'?'selected':''}>Production Assistant</option>
+        <option value="Production Design" ${hc.desc==='Production Design'?'selected':''}>Production Design</option>
+        <option value="Production House" ${hc.desc==='Production House'?'selected':''}>Production House</option>
+        <option value="Props Rentals" ${hc.desc==='Props Rentals'?'selected':''}>Props Rentals</option>
+        <option value="Social Media" ${hc.desc==='Social Media'?'selected':''}>Social Media</option>
+        <option value="Sound Engineer/Post Audio" ${hc.desc==='Sound Engineer/Post Audio'?'selected':''}>Sound Engineer/Post Audio</option>
+        <option value="Stock Imagery/Footage" ${hc.desc==='Stock Imagery/Footage'?'selected':''}>Stock Imagery/Footage</option>
+        <option value="Studio Rental" ${hc.desc==='Studio Rental'?'selected':''}>Studio Rental</option>
+        <option value="Talent" ${hc.desc==='Talent'?'selected':''}>Talent</option>
+        <option value="Trafficking Fees" ${hc.desc==='Trafficking Fees'?'selected':''}>Trafficking Fees</option>
+        <option value="Video Editor" ${hc.desc==='Video Editor'?'selected':''}>Video Editor</option>
+        <option value="Videography / Camera Operator" ${hc.desc==='Videography / Camera Operator'?'selected':''}>Videography / Camera Operator</option>
+        <option value="Wardrobe Stylist" ${hc.desc==='Wardrobe Stylist'?'selected':''}>Wardrobe Stylist</option>
+        <option value="Web Design" ${hc.desc==='Web Design'?'selected':''}>Web Design</option>
+        <option value="Web Development" ${hc.desc==='Web Development'?'selected':''}>Web Development</option>
+        <option value="Other" ${hc.desc==='Other'?'selected':''}>Other</option>
+      </select>
       <input class="hc-num" type="number" min="0" value="${hc.qty||''}" placeholder="Qty"
         oninput="hardCosts[${i}].qty=parseFloat(this.value)||0;updateHCTotal(${i});updateSummary()">
       <input class="hc-num" type="number" min="0" value="${hc.rate||''}" placeholder="Rate"

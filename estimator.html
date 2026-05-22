@@ -106,17 +106,21 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:v
 .rsc{font-size:11px;color:var(--t3)}
 /* HARD COSTS */
 .hard-costs{background:#fff;border:1px solid var(--border)}
-.hc-row{display:flex;gap:6px;align-items:center;padding:7px 1.25rem;border-bottom:1px solid var(--border);font-size:12px}
+.hc-row{padding:10px 1.25rem;border-bottom:1px solid var(--border);font-size:12px}
 .hc-row:last-child{border-bottom:none}
-.hc-desc{flex:1;background:none;border:none;font-family:inherit;font-size:12px;color:var(--black);outline:none;padding:2px 0;cursor:pointer}
-.hc-desc::placeholder{color:var(--t3)}
-.hc-desc:focus{border-bottom:1px solid var(--bs)}
+.hc-row-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hc-desc{flex:1;background:none;border:none;font-family:inherit;font-size:12px;color:var(--black);outline:none;padding:2px 0;cursor:pointer;min-width:0}
 .hc-desc option{background:#fff}
-.hc-num{width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none}
-.hc-num:focus{border-color:var(--black)}
-.hc-total{width:72px;font-size:11px;color:var(--t3);text-align:right}
-.hc-del{width:20px;border:none;background:none;cursor:pointer;color:var(--t3);font-size:13px;flex-shrink:0}
+.hc-del{width:20px;border:none;background:none;cursor:pointer;color:var(--t3);font-size:13px;flex-shrink:0;padding:0}
 .hc-del:hover{color:var(--red)}
+.hc-row-nums{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:5px;align-items:center}
+.hc-field{display:flex;flex-direction:column;gap:2px}
+.hc-field label{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.hc-num{width:100%;padding:4px 7px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none}
+.hc-num:focus{border-color:var(--black)}
+.hc-total-box{text-align:right;padding-top:12px}
+.hc-total{font-size:12px;font-weight:600;color:var(--black)}
+.hc-total-sub{font-size:10px;color:var(--t3)}
 .add-hc-btn{width:100%;padding:7px;border:none;background:var(--off);font-family:inherit;font-size:11px;color:var(--t2);cursor:pointer;text-align:center;transition:background .12s;border-top:1px solid var(--border)}
 .add-hc-btn:hover{background:var(--mid)}
 /* TOTAL PANEL */
@@ -650,7 +654,817 @@ function totalHrs() {
   return phases.reduce((sum, p) => sum + phaseHrs(p), 0);
 }
 function totalHardCosts() {
-  return hardCosts.reduce((sum, hc) => sum + num(hc.qty) * num(hc.rate) * 1.25, 0);
+  return hardCosts.reduce((sum, hc) => {
+    const markup = hc.markup != null ? hc.markup : 25;
+    return sum + num(hc.qty) * num(hc.rate) * (1 + markup / 100);
+  }, 0);
+}
+function totalCost() {
+  return totalLabor() + totalHardCosts();
+}
+function estGPM() {
+  const labor = totalLabor();
+  const total = totalCost();
+  if (total <= 0) return null;
+  const internalCost = phases.reduce((sum, p) =>
+    sum + p.hrs.reduce((s, h, i) => s + h * COST_RATES[ROLES[i].id], 0), 0);
+  return Math.round((1 - internalCost / total) * 100);
+}
+
+// ─── LOAD TEMPLATE ────────────────────────────────────────────────────────────
+function loadTemplate() {
+  const svc = document.getElementById('svcSelect').value;
+  if (!svc) { resetEstimator(); return; }
+
+  currentSvc = svc;
+  const tmpl = TEMPLATES[svc];
+  if (!tmpl) return;
+
+  phases = tmpl.phases.map(p => ({
+    name: p.name,
+    timing: p.timing,
+    comment: p.comment,
+    hrs: [...p.hrs]
+  }));
+  hardCosts = [];
+
+  showEstimator();
+  renderPhases();
+  renderHardCosts();
+  updateSummary();
+}
+
+function showEstimator() {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('summaryBar').style.display = 'flex';
+  document.getElementById('gaugeBlock').style.display = 'block';
+  document.getElementById('estimatorLayout').style.display = 'grid';
+  const hist = HIST[currentSvc];
+  if (hist) {
+    document.getElementById('phasesTitle').textContent = hist.label + ' — Phase Breakdown';
+  }
+}
+
+function resetEstimator() {
+  currentSvc = null; phases = []; hardCosts = [];
+  document.getElementById('svcSelect').value = '';
+  document.getElementById('projName').value = '';
+  document.getElementById('clientName').value = '';
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('summaryBar').style.display = 'none';
+  document.getElementById('gaugeBlock').style.display = 'none';
+  document.getElementById('estimatorLayout').style.display = 'none';
+}
+
+// ─── RENDER PHASES ────────────────────────────────────────────────────────────
+function renderPhases() {
+  const body = document.getElementById('phasesBody');
+  body.innerHTML = phases.map((p, pi) => `
+    <div class="phase-row" id="phase_${pi}">
+      <div class="phase-name-row">
+        <input class="phase-name" value="${esc(p.name)}"
+          oninput="phases[${pi}].name=this.value">
+        <input class="phase-timing" value="${esc(p.timing)}" placeholder="timing"
+          oninput="phases[${pi}].timing=this.value">
+        <button class="del-phase" onclick="deletePhase(${pi})" title="Remove phase">✕</button>
+      </div>
+      <textarea class="phase-comment" rows="2"
+        oninput="phases[${pi}].comment=this.value">${esc(p.comment)}</textarea>
+      <div class="roles-grid">
+        ${ROLES.map((r, ri) => `
+          <div class="role-row">
+            <span class="role-name">${r.name} <span style="color:var(--t3)">(${fmt(r.rate)}/hr)</span></span>
+            <input class="role-input" type="number" min="0" step="0.5"
+              value="${p.hrs[ri] || ''}"
+              placeholder="0"
+              oninput="phases[${pi}].hrs[${ri}]=parseFloat(this.value)||0;updateSummary();updatePhaseTotal(${pi})">
+            <span class="role-cost" id="rc_${pi}_${ri}">${p.hrs[ri] ? fmt(p.hrs[ri] * r.rate) : '—'}</span>
+          </div>`).join('')}
+      </div>
+      <div class="phase-total-row">
+        <span class="phase-total-hrs" id="pth_${pi}">${phaseHrs(p).toFixed(1)} hrs</span>
+        <span class="phase-total-cost" id="ptc_${pi}">${fmt(phaseTotal(p))}</span>
+      </div>
+    </div>`).join('');
+}
+
+function updatePhaseTotal(pi) {
+  const p = phases[pi];
+  document.getElementById('pth_'+pi).textContent = phaseHrs(p).toFixed(1) + ' hrs';
+  document.getElementById('ptc_'+pi).textContent = fmt(phaseTotal(p));
+  ROLES.forEach((r, ri) => {
+    const el = document.getElementById(`rc_${pi}_${ri}`);
+    if (el) el.textContent = p.hrs[ri] ? fmt(p.hrs[ri] * r.rate) : '—';
+  });
+}
+
+function addPhase() {
+  phases.push({ name:'New Phase', timing:'', comment:'', hrs:new Array(12).fill(0) });
+  renderPhases();
+  updateSummary();
+}
+
+function deletePhase(pi) {
+  phases.splice(pi, 1);
+  renderPhases();
+  updateSummary();
+}
+
+// ─── HARD COSTS ───────────────────────────────────────────────────────────────
+function renderHardCosts() {
+  const wrap = document.getElementById('hardCostRows');
+  if (hardCosts.length === 0) {
+    wrap.innerHTML = '<div style="padding:8px 1.25rem;font-size:12px;color:var(--t3)">No hard costs added.</div>';
+    return;
+  }
+  wrap.innerHTML = hardCosts.map((hc, i) => `
+    <div class="hc-row">
+      <div class="hc-row-top">
+        <select class="hc-desc" onchange="hardCosts[${i}].desc=this.value;updateSummary()">
+        
+      </div>
+        <button class="hc-del" onclick="deleteHC(${i})">✕</button>
+      <div class="hc-row-nums">
+        <div class="hc-field">
+          <label>Qty</label>
+          <input class="hc-num" type="number" min="0" value="${hc.qty||''}" placeholder="1"
+            oninput="hardCosts[${i}].qty=parseFloat(this.value)||0;updateHCTotal(${i});updateSummary()">
+        </div>
+        <div class="hc-field">
+          <label>Unit cost</label>
+          <input class="hc-num" type="number" min="0" value="${hc.rate||''}" placeholder="0.00"
+            oninput="hardCosts[${i}].rate=parseFloat(this.value)||0;updateHCTotal(${i});updateSummary()">
+        </div>
+        <div class="hc-field">
+          <label>Markup %</label>
+          <input class="hc-num" type="number" min="0" value="${hc.markup!=null?hc.markup:25}" placeholder="25"
+            oninput="hardCosts[${i}].markup=parseFloat(this.value)||0;updateHCTotal(${i});updateSummary()">
+        </div>
+        <div class="hc-total-box">
+          <div class="hc-total" id="hct_${i}">—</div>
+          <div class="hc-total-sub">total billed</div>
+        </div>
+      </div>
+    </div>}).join('');tml>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Estimator — Crew</title>
+<style>
+:root {
+  --black:#111110;--white:#fff;--off:#F5F3EF;--mid:#E8E5E0;
+  --t2:#6B6860;--t3:#A8A49E;--accent:#E8472A;
+  --border:rgba(17,17,16,.1);--bs:rgba(17,17,16,.18);--r:3px;
+  --green:#1a5c38;--green-bg:#e6f2ec;
+  --amber:#7a4e0a;--amber-bg:#fbf1dc;
+  --red:#8b1f1f;--red-bg:#faeaea;
+  --blue:#1a4fad;--blue-bg:#e8f0fe;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:var(--black);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+/* NAV */
+.sitenav{background:var(--black);height:60px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:14px}
+.nav-name{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.nav-div{width:1px;height:18px;background:rgba(255,255,255,.2)}
+.nav-links{display:flex;gap:2px}
+.nav-link{padding:6px 14px;border-radius:2px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);text-decoration:none;transition:all .12s;border:1px solid transparent}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,.08)}
+.nav-link.active{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.15)}
+.nav-right{font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.03em}
+/* LAYOUT */
+.shell{max-width:1200px;margin:0 auto;padding:2rem 2rem 5rem}
+.intro{margin-bottom:2rem;padding-bottom:1.75rem;border-bottom:1px solid var(--border)}
+.intro h1{font-size:clamp(24px,3vw,38px);font-weight:700;letter-spacing:-.025em;line-height:1.1;margin-bottom:8px}
+.intro h1 em{font-style:italic;font-weight:300;color:var(--t2)}
+.intro p{font-size:13px;color:var(--t2);max-width:560px;line-height:1.65}
+/* SERVICE PICKER */
+.picker-block{background:#fff;border:1px solid var(--border);padding:1.5rem;margin-bottom:1.5rem}
+.picker-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3)}
+.field select,.field input{padding:9px 12px;border:1px solid var(--bs);border-radius:var(--r);background:#fff;font-family:inherit;font-size:13px;color:var(--black);outline:none;transition:border-color .15s,box-shadow .15s;height:38px}
+.field select{min-width:280px}
+.field input{min-width:200px}
+.field select:focus,.field input:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(17,17,16,.07)}
+.btn-reset{padding:9px 18px;border-radius:var(--r);border:1px solid var(--bs);background:var(--off);font-family:inherit;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;height:38px;transition:all .12s}
+.btn-reset:hover{background:var(--mid);color:var(--black)}
+/* SUMMARY BAR */
+.summary-bar{background:var(--black);color:#fff;padding:1rem 1.5rem;display:flex;gap:0;align-items:stretch;margin-bottom:1.5rem;flex-wrap:wrap}
+.sb-item{flex:1;min-width:140px;padding:.5rem 1.25rem;border-right:1px solid rgba(255,255,255,.1)}
+.sb-item:first-child{padding-left:0}
+.sb-item:last-child{border-right:none}
+.sb-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:4px}
+.sb-val{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px}
+.sb-val.good{color:#7DD9A8}
+.sb-val.warn{color:#F5C842}
+.sb-val.bad{color:#F08080}
+/* RANGE GAUGE */
+.gauge-block{background:#fff;border:1px solid var(--border);padding:1rem 1.5rem;margin-bottom:1.5rem}
+.gauge-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.gauge-title{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+.gauge-status{font-size:12px;font-weight:600}
+.gauge-track{position:relative;height:12px;background:var(--mid);border-radius:2px;margin-bottom:8px}
+.gauge-range{position:absolute;top:0;bottom:0;background:#D4E4F5;border-radius:2px}
+.gauge-needle{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--accent);border-radius:2px;transform:translateX(-50%);transition:left .3s}
+.gauge-needle::after{content:'▼';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--accent)}
+.gauge-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--t3)}
+/* TWO-COL LAYOUT */
+.estimator-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+@media(max-width:900px){.estimator-layout{grid-template-columns:1fr}}
+/* PHASES TABLE */
+.phases-wrap{background:#fff;border:1px solid var(--border)}
+.phases-header{background:var(--black);padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between}
+.phases-header h2{font-size:13px;font-weight:600;letter-spacing:.04em;color:#fff}
+.add-phase-btn{padding:5px 12px;border-radius:2px;border:1px solid rgba(255,255,255,.2);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;font-family:inherit;transition:all .12s}
+.add-phase-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.role-header-row{display:grid;background:var(--off);border-bottom:1px solid var(--border);padding:6px 1.25rem;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);gap:6px}
+.phase-row{border-bottom:1px solid var(--border);padding:.875rem 1.25rem}
+.phase-row:last-child{border-bottom:none}
+.phase-name-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.phase-name{font-size:13px;font-weight:600;color:var(--black);flex:1;background:none;border:none;font-family:inherit;outline:none;padding:2px 0}
+.phase-name:focus{border-bottom:1px solid var(--bs)}
+.phase-timing{font-size:11px;color:var(--t3);background:none;border:none;font-family:inherit;outline:none;width:80px;text-align:right}
+.phase-timing:focus{border-bottom:1px solid var(--bs)}
+.phase-comment{font-size:11px;color:var(--t2);margin-bottom:8px;line-height:1.5;padding:4px 6px;background:var(--off);border-radius:2px;width:100%;resize:vertical;border:none;font-family:inherit;min-height:32px}
+.phase-comment:focus{outline:1px solid var(--bs)}
+.roles-grid{display:grid;gap:5px}
+.role-row{display:flex;align-items:center;gap:6px;font-size:12px}
+.role-name{flex:1;color:var(--t2);font-size:11px}
+.role-input{width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none;transition:border-color .12s}
+.role-input:focus{border-color:var(--black)}
+.role-cost{width:72px;font-size:11px;color:var(--t3);text-align:right}
+.phase-total-row{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:12px}
+.phase-total-hrs{color:var(--t2)}
+.phase-total-cost{font-weight:600;color:var(--black)}
+.del-phase{width:22px;height:22px;border:none;background:none;cursor:pointer;color:var(--t3);font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:2px;transition:all .12s;flex-shrink:0}
+.del-phase:hover{background:var(--red-bg);color:var(--red)}
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+/* ROLE SUMMARY */
+.role-summary{background:#fff;border:1px solid var(--border)}
+.panel-head{background:var(--off);border-bottom:1px solid var(--border);padding:.75rem 1.25rem;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t2)}
+.role-sum-row{display:flex;justify-content:space-between;align-items:center;padding:7px 1.25rem;border-bottom:1px solid var(--border);font-size:12px}
+.role-sum-row:last-child{border-bottom:none}
+.rsn{color:var(--t2)}
+.rsh{font-size:11px;font-weight:600;color:var(--black)}
+.rsc{font-size:11px;color:var(--t3)}
+/* HARD COSTS */
+.hard-costs{background:#fff;border:1px solid var(--border)}
+.hc-row{padding:10px 1.25rem;border-bottom:1px solid var(--border);font-size:12px}
+.hc-row:last-child{border-bottom:none}
+.hc-row-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.hc-desc{flex:1;background:none;border:none;font-family:inherit;font-size:12px;color:var(--black);outline:none;padding:2px 0;cursor:pointer;min-width:0}
+.hc-desc option{background:#fff}
+.hc-del{width:20px;border:none;background:none;cursor:pointer;color:var(--t3);font-size:13px;flex-shrink:0;padding:0}
+.hc-del:hover{color:var(--red)}
+.hc-row-nums{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:5px;align-items:center}
+.hc-field{display:flex;flex-direction:column;gap:2px}
+.hc-field label{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.hc-num{width:100%;padding:4px 7px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none}
+.hc-num:focus{border-color:var(--black)}
+.hc-total-box{text-align:right;padding-top:12px}
+.hc-total{font-size:12px;font-weight:600;color:var(--black)}
+.hc-total-sub{font-size:10px;color:var(--t3)}
+.add-hc-btn{width:100%;padding:7px;border:none;background:var(--off);font-family:inherit;font-size:11px;color:var(--t2);cursor:pointer;text-align:center;transition:background .12s;border-top:1px solid var(--border)}
+.add-hc-btn:hover{background:var(--mid)}
+/* TOTAL PANEL */
+.total-panel{background:var(--black);color:#fff;padding:1.25rem}
+.tp-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+.tp-row.total{border-top:1px solid rgba(255,255,255,.15);margin-top:8px;padding-top:12px}
+.tp-label{color:rgba(255,255,255,.55)}
+.tp-val{font-weight:600}
+.tp-row.total .tp-label,.tp-row.total .tp-val{color:#fff;font-size:17px;font-weight:700}
+/* ACTIONS */
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.act-btn{padding:9px 20px;border-radius:var(--r);border:1px solid var(--bs);background:#fff;font-family:inherit;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.act-btn:hover{background:var(--black);border-color:var(--black);color:#fff}
+.act-btn.primary{background:var(--black);border-color:var(--black);color:#fff}
+.act-btn.primary:hover{background:#333}
+/* PRINT */
+@media print{
+  .sitenav,.picker-block,.gauge-block,.actions,.add-phase-btn,.del-phase,.add-hc-btn,.hc-del,.btn-reset{display:none!important}
+  .estimator-layout{grid-template-columns:1fr 300px}
+  body{background:#fff}
+  .shell{padding:1rem}
+}
+/* EMPTY STATE */
+.empty-estimator{text-align:center;padding:4rem 2rem;color:var(--t3);background:#fff;border:1px solid var(--border)}
+.empty-estimator h3{font-size:16px;font-weight:500;color:var(--t2);margin-bottom:8px}
+footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;background:#fff;margin-top:3rem}
+.ft-logo{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--black)}
+.ft-copy{font-size:11px;color:var(--t3)}
+</style>
+</head>
+<body>
+
+<nav class="sitenav">
+  <div class="nav-logo">
+    <div class="nav-name">Crew</div>
+    <div class="nav-div"></div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Scoping Tool</a>
+      <a href="projects.html" class="nav-link">Project Database</a>
+      <a href="estimator.html" class="nav-link active">Estimator</a>
+    </div>
+  </div>
+  <div class="nav-right">Internal use only</div>
+</nav>
+
+<div class="shell">
+  <div class="intro">
+    <h1>Build a scope, <em>in minutes.</em></h1>
+    <p>Choose a service type to load a pre-populated phase breakdown. Adjust hours per role, add hard costs, and watch the estimate calculate live — anchored to what we've historically billed.</p>
+  </div>
+
+  <!-- SERVICE PICKER -->
+  <div class="picker-block">
+    <div class="picker-row">
+      <div class="field">
+        <label>Service type</label>
+        <select id="svcSelect" onchange="loadTemplate()">
+          <option value="">— Choose a service type —</option>
+          <optgroup label="Account Services">
+            <option value="agency_retainer">Agency Engagement Retainer</option>
+            <option value="marketing_sprint">Marketing Sprint & Strategy</option>
+            <option value="research">Research & Insights</option>
+          </optgroup>
+          <optgroup label="Creative">
+            <option value="brand_strategy">Brand Strategy & Identity Systems</option>
+            <option value="campaign_strategy">Campaign Strategy & Concepts</option>
+            <option value="campaign_rollout">Campaign Asset Development & Rollout</option>
+            <option value="packaging">Packaging Design</option>
+            <option value="brand_guidelines">Brand Guidelines</option>
+            <option value="presentation_deck">Presentation Deck</option>
+            <option value="single_execution">Single Creative Execution</option>
+            <option value="tradeshow">Tradeshow Concept & Design</option>
+            <option value="naming">Naming</option>
+          </optgroup>
+          <optgroup label="Digital">
+            <option value="digital_campaign">Digital Campaign Setup, Optimization & Reporting</option>
+            <option value="paid_media">Paid Media Plan or Campaign</option>
+            <option value="owned_media">Owned Media (Email, Blog, Newsletter)</option>
+          </optgroup>
+          <optgroup label="Social">
+            <option value="social_content">Social Content & Management</option>
+            <option value="social_influencer">Social Influencer Campaign & Management</option>
+            <option value="social_strategy">Social Media Audit or Strategy</option>
+          </optgroup>
+          <optgroup label="Studios">
+            <option value="video">Video Production</option>
+            <option value="photography">Photography</option>
+            <option value="radio">Radio Spot</option>
+          </optgroup>
+          <optgroup label="Web">
+            <option value="web_build">Web Design & Build</option>
+            <option value="web_refresh">Website Refresh</option>
+            <option value="web_maintenance">Web Maintenance</option>
+            <option value="web_audit">Web Audit or Strategy</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field">
+        <label>Project name (optional)</label>
+        <input type="text" id="projName" placeholder="e.g. Farmer Focus Brand Strategy" oninput="updateSummary()">
+      </div>
+      <div class="field">
+        <label>Client (optional)</label>
+        <input type="text" id="clientName" placeholder="Client name" oninput="updateSummary()">
+      </div>
+      <button class="btn-reset" onclick="resetEstimator()">Reset</button>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div class="empty-estimator" id="emptyState">
+    <h3>No service selected</h3>
+    <p>Choose a service type above to load a pre-populated phase breakdown.</p>
+  </div>
+
+  <!-- LIVE SUMMARY BAR -->
+  <div class="summary-bar" id="summaryBar" style="display:none">
+    <div class="sb-item">
+      <div class="sb-label">Total labor</div>
+      <div class="sb-val" id="sb-labor">$0</div>
+      <div class="sb-sub" id="sb-hrs">0 hours</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-label">Hard costs</div>
+      <div class="sb-val" id="sb-costs">$0</div>
+      <div class="sb-sub">external expenses</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-label">Total estimate</div>
+      <div class="sb-val" id="sb-total">$0</div>
+      <div class="sb-sub">before tax</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-label">Blended rate</div>
+      <div class="sb-val" id="sb-rate">—</div>
+      <div class="sb-sub">avg $/hr across roles</div>
+    </div>
+    <div class="sb-item">
+      <div class="sb-label">Est. GPM</div>
+      <div class="sb-val" id="sb-gpm">—</div>
+      <div class="sb-sub">at these hours</div>
+    </div>
+  </div>
+
+  <!-- RANGE GAUGE -->
+  <div class="gauge-block" id="gaugeBlock" style="display:none">
+    <div class="gauge-head">
+      <div class="gauge-title" id="gaugeTitle">Comparing to historical projects</div>
+      <div class="gauge-status" id="gaugeStatus"></div>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-range" id="gaugeRange"></div>
+      <div class="gauge-needle" id="gaugeNeedle"></div>
+    </div>
+    <div class="gauge-labels">
+      <span id="gaugeLo"></span>
+      <span style="color:var(--t3);font-size:10px">← typical range →</span>
+      <span id="gaugeHi"></span>
+    </div>
+  </div>
+
+  <!-- MAIN ESTIMATOR -->
+  <div class="estimator-layout" id="estimatorLayout" style="display:none">
+    <!-- PHASES -->
+    <div>
+      <div class="phases-wrap" id="phasesWrap">
+        <div class="phases-header">
+          <h2 id="phasesTitle">Phase Breakdown</h2>
+          <button class="add-phase-btn" onclick="addPhase()">+ Add phase</button>
+        </div>
+        <div id="phasesBody"></div>
+      </div>
+      <div class="actions">
+        <button class="act-btn primary" onclick="window.print()">Print / Save as PDF</button>
+        <button class="act-btn" onclick="copyToClipboard()">Copy summary to clipboard</button>
+        <a href="index.html" class="act-btn">← Back to Scoping Tool</a>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <!-- ROLE SUMMARY -->
+      <div class="role-summary">
+        <div class="panel-head">Hours by role</div>
+        <div id="roleSummary"></div>
+      </div>
+
+      <!-- HARD COSTS -->
+      <div class="hard-costs">
+        <div class="panel-head">Hard costs / external expenses</div>
+        <div id="hardCostRows"></div>
+        <button class="add-hc-btn" onclick="addHardCost()">+ Add expense</button>
+      </div>
+
+      <!-- TOTAL -->
+      <div class="total-panel" id="totalPanel">
+        <div class="tp-row">
+          <span class="tp-label">Total labor</span>
+          <span class="tp-val" id="tp-labor">$0</span>
+        </div>
+        <div class="tp-row">
+          <span class="tp-label">Hard costs</span>
+          <span class="tp-val" id="tp-costs">$0</span>
+        </div>
+        <div class="tp-row total">
+          <span class="tp-label">Total estimate</span>
+          <span class="tp-val" id="tp-total">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="ft-logo">Crew Marketing Partners</div>
+  <div class="ft-copy">Internal tool · Dallas / Toronto / Vancouver · © 2026</div>
+</footer>
+
+<script>
+// ─── ROLES & RATES ────────────────────────────────────────────────────────────
+const ROLES = [
+  { id:'pm',    name:'Project Manager',              rate:160, dept:'Account' },
+  { id:'strat', name:'Strategist',                   rate:180, dept:'Account' },
+  { id:'socmgr',name:'Social Media Manager',         rate:160, dept:'Social'  },
+  { id:'socsp', name:'Social Media Specialist',      rate:150, dept:'Social'  },
+  { id:'content',name:'Content Creator',             rate:150, dept:'Social'  },
+  { id:'ad',    name:'AD / Design',                  rate:160, dept:'Creative'},
+  { id:'copy',  name:'Copywriter',                   rate:160, dept:'Creative'},
+  { id:'ecd',   name:'Executive Creative Director',  rate:180, dept:'Creative'},
+  { id:'cco',   name:'Creative CCO',                 rate:200, dept:'Creative'},
+  { id:'prod',  name:'Producer',                     rate:180, dept:'Studios' },
+  { id:'webpm', name:'Web Project Manager',          rate:160, dept:'Web'     },
+  { id:'webst', name:'Web Strategy / Dev',           rate:160, dept:'Web'     },
+];
+
+// Cost rate (internal) vs billing rate
+const COST_RATES = {
+  pm:60, strat:70, socmgr:55, socsp:45, content:50,
+  ad:60, copy:55, ecd:90, cco:100, prod:75, webpm:60, webst:65
+};
+
+// ─── HISTORICAL DATA (p25, median, p75 billed — from project data) ────────────
+const HIST = {
+  brand_strategy:      { p25:32985, median:42345, p75:49810, label:'Brand Strategy & Identity Systems' },
+  campaign_strategy:   { p25:14203, median:19900, p75:31215, label:'Campaign Strategy & Concepts' },
+  campaign_rollout:    { p25:10467, median:19927, p75:39753, label:'Campaign Asset Dev & Rollout' },
+  packaging:           { p25:3348,  median:6722,  p75:12129, label:'Packaging Design' },
+  brand_guidelines:    { p25:2443,  median:6406,  p75:11896, label:'Brand Guidelines' },
+  presentation_deck:   { p25:7566,  median:8635,  p75:18603, label:'Presentation Deck' },
+  single_execution:    { p25:1760,  median:5050,  p75:9300,  label:'Single Creative Execution' },
+  tradeshow:           { p25:5763,  median:6805,  p75:9399,  label:'Tradeshow Concept & Design' },
+  naming:              { p25:4185,  median:6930,  p75:9655,  label:'Naming' },
+  digital_campaign:    { p25:5447,  median:10720, p75:16845, label:'Digital Campaign Setup & Reporting' },
+  paid_media:          { p25:2475,  median:5990,  p75:15030, label:'Paid Media Plan or Campaign' },
+  owned_media:         { p25:2930,  median:7500,  p75:13400, label:'Owned Media' },
+  social_content:      { p25:15316, median:26400, p75:52325, label:'Social Content & Management' },
+  social_influencer:   { p25:8360,  median:11626, p75:26995, label:'Social Influencer Campaign' },
+  social_strategy:     { p25:8000,  median:9000,  p75:12452, label:'Social Media Audit or Strategy' },
+  video:               { p25:7830,  median:17960, p75:70750, label:'Video Production' },
+  photography:         { p25:4910,  median:12702, p75:23160, label:'Photography' },
+  radio:               { p25:10327, median:11600, p75:13300, label:'Radio Spot' },
+  web_build:           { p25:15078, median:27981, p75:39360, label:'Web Design & Build' },
+  web_refresh:         { p25:10735, median:14940, p75:19862, label:'Website Refresh' },
+  web_maintenance:     { p25:1605,  median:3060,  p75:4515,  label:'Web Maintenance' },
+  web_audit:           { p25:3515,  median:5750,  p75:12600, label:'Web Audit or Strategy' },
+  agency_retainer:     { p25:11000, median:22722, p75:38880, label:'Agency Engagement Retainer' },
+  marketing_sprint:    { p25:6480,  median:17000, p75:28000, label:'Marketing Sprint & Strategy' },
+  research:            { p25:8840,  median:11523, p75:20343, label:'Research & Insights' },
+};
+
+// ─── PHASE TEMPLATES ──────────────────────────────────────────────────────────
+// hours per role: [pm, strat, socmgr, socsp, content, ad, copy, ecd, cco, prod, webpm, webst]
+const TEMPLATES = {
+  brand_strategy: {
+    desc: 'A Brand Strategy defines the methodical development of a brand in order to achieve long-term business objectives — including brand foundation, platform, identity direction, and logo guidelines.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'WMJIG, billing, WBS, scheduling internal calls', hrs:[5,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Creative Brief', timing:'~1 week', comment:'Brand questionnaire prepped and sent to client. Kick-off meeting — review questionnaire & steps.', hrs:[0,3,0,0,0,1,1,1,1,0,0,0] },
+      { name:'Phase 2: Brand Discovery (Glass Vault)', timing:'~1 week', comment:'Prep for Glass Vault & internal reviews. Client meeting — Glass Vault session.', hrs:[0,7,0,0,0,7.5,3.5,4.5,1,0,0,0] },
+      { name:'Phase 3: Brand Foundation', timing:'~2 weeks', comment:'Internal kick-off & Glass Vault recap. Brand Foundation development. Internal review & refinements. Client presentation. Revisions & final approval.', hrs:[0,7.5,0,0,0,9.5,25.5,8.5,3,0,0,0] },
+      { name:'Phase 4: Brand Platform & Identity Direction', timing:'~2 weeks', comment:'Deliver marketing insights to Creative. Develop Brand Platform + Identity Direction. Internal review. Client presentation. Revisions & final approval.', hrs:[0,8.5,0,0,0,21,21,9,3,0,0,0] },
+      { name:'Phase 5: Brand Identity', timing:'~2 weeks', comment:'Concept development (logo & vision casting). Internal review & refinements. Client presentation. Revisions & final approval.', hrs:[0,6,0,0,0,59,29,17,0,0,0,0] },
+      { name:'Optional: Logo Guideline & Logo Release', timing:'~2 weeks', comment:'Logo guideline development. Internal review. Present to client. Revisions & final approval. Logo files prepped & handoff.', hrs:[1.5,0,0,0,0,13.5,0,5,0,0,0,0] },
+      { name:'Misc. Follow-ups & Communication', timing:'', comment:'Ongoing client communication and ad hoc requests throughout project.', hrs:[0,3,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  packaging: {
+    desc: 'Packaging design for an existing brand. Includes PDP + all panels, 2 rounds of revisions, and production-ready files.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, scheduling, internal onboarding.', hrs:[3,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Brief & Discovery', timing:'~1 week', comment:'Creative brief review. Client kick-off. Brand & competitive review.', hrs:[0,2,0,0,0,2,1,1,0,0,0,0] },
+      { name:'Phase 2: Concept Development', timing:'~2 weeks', comment:'Initial concept exploration. Internal review. 2 concepts presented to client.', hrs:[0,0,0,0,0,18,4,4,0,0,0,0] },
+      { name:'Phase 3: Revision Round 1', timing:'~1 week', comment:'Client feedback incorporated. Internal review. Revised concepts presented.', hrs:[0,1,0,0,0,8,2,2,0,0,0,0] },
+      { name:'Phase 4: Revision Round 2 & Approval', timing:'~1 week', comment:'Final refinements based on client feedback. Final approval.', hrs:[0,0,0,0,0,5,1,1,0,0,0,0] },
+      { name:'Phase 5: Production Files', timing:'~1 week', comment:'Final artwork & dieline setup. All panels production-ready. File handoff.', hrs:[1,0,0,0,0,6,0,1,0,0,0,0] },
+      { name:'Misc. Follow-ups & Communication', timing:'', comment:'Ongoing client communication and ad hoc requests.', hrs:[0,2,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  campaign_strategy: {
+    desc: 'Campaign strategy development including 2–3 campaign territories and refinement of one approved direction.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, scheduling, internal onboarding.', hrs:[3,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Briefing & Research', timing:'~1 week', comment:'Creative brief review. Competitive research. Audience insights. Internal alignment.', hrs:[0,6,0,0,0,2,2,2,0,0,0,0] },
+      { name:'Phase 2: Concept Development', timing:'~2 weeks', comment:'2–3 campaign territory development. Internal creative review. Present to client.', hrs:[0,4,0,0,0,20,12,8,2,0,0,0] },
+      { name:'Phase 3: Refinement & Approval', timing:'~1 week', comment:'Refine selected territory. Internal review. Final client approval.', hrs:[0,3,0,0,0,12,6,4,1,0,0,0] },
+      { name:'Misc. Follow-ups & Communication', timing:'', comment:'Ongoing client communication and ad hoc requests.', hrs:[0,3,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  campaign_rollout: {
+    desc: 'Rollout of an approved campaign concept into media plan deliverables across channels.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, asset tracker, scheduling.', hrs:[3,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Asset Planning', timing:'~1 week', comment:'Review approved concept & media plan. Define asset list. Internal alignment.', hrs:[0,2,0,0,0,3,2,2,0,0,0,0] },
+      { name:'Phase 2: Asset Development', timing:'~3 weeks', comment:'Design and develop all campaign assets (digital, print, OOH, social, etc.). Internal review rounds.', hrs:[0,0,0,0,0,40,15,8,0,0,0,0] },
+      { name:'Phase 3: Client Review & Revisions', timing:'~1 week', comment:'Client presentation. 2 rounds of revisions across asset set.', hrs:[0,2,0,0,0,16,6,4,0,0,0,0] },
+      { name:'Phase 4: Production & Handoff', timing:'~1 week', comment:'Final files prepared. Handoff to media team or printer.', hrs:[1,0,0,0,0,10,2,2,0,0,0,0] },
+      { name:'Misc. Follow-ups & Communication', timing:'', comment:'Ongoing client communication and ad hoc requests.', hrs:[0,2,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  brand_guidelines: {
+    desc: 'Brand guidelines document (~15–20 pages) covering logo usage, typography, colour, photography, messaging, and visual standards.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, scheduling.', hrs:[2,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Content Collection & Structure', timing:'~1 week', comment:'Gather existing brand assets. Define guideline structure and scope.', hrs:[0,2,0,0,0,2,1,1,0,0,0,0] },
+      { name:'Phase 2: Design & Layout', timing:'~2 weeks', comment:'Full guideline design and layout. Internal review. All sections developed.', hrs:[0,0,0,0,0,18,6,4,0,0,0,0] },
+      { name:'Phase 3: Revisions & Finalization', timing:'~1 week', comment:'Client review. 2 revision rounds. Final approval. PDF export.', hrs:[1,0,0,0,0,8,3,2,0,0,0,0] },
+      { name:'Misc. Follow-ups', timing:'', comment:'Client communication and final file handoff.', hrs:[0,1,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  presentation_deck: {
+    desc: 'Sales, investor, retail, or credentials deck. Delivered as an editable PowerPoint.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, scheduling.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Brief & Content', timing:'~1 week', comment:'Brief review. Content collection from client. Outline and structure.', hrs:[0,2,0,0,0,1,3,1,0,0,0,0] },
+      { name:'Phase 2: Design & Build', timing:'~1 week', comment:'Full deck design and layout. Internal review.', hrs:[0,0,0,0,0,14,6,3,0,0,0,0] },
+      { name:'Phase 3: Revisions & Handoff', timing:'~1 week', comment:'Client review. 2 rounds of revisions. Final editable PPT handoff.', hrs:[0,1,0,0,0,6,3,1,0,0,0,0] },
+    ]
+  },
+  single_execution: {
+    desc: 'A single creative deliverable — sell sheet, poster, digital banner, brochure, print ad, or similar.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Brief & Concept', timing:'~3 days', comment:'Brief review. Initial concept development. Internal review.', hrs:[0,1,0,0,0,5,2,1,0,0,0,0] },
+      { name:'Phase 2: Design & Revisions', timing:'~1 week', comment:'Design execution. 2 client revision rounds. Final file production.', hrs:[0,0,0,0,0,8,2,1,0,0,0,0] },
+    ]
+  },
+  tradeshow: {
+    desc: 'Tradeshow booth concept and design — backdrop, podium, side panels. Production files for vendor.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, vendor coordination.', hrs:[2,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Concept Development', timing:'~1 week', comment:'Brief review. 2 booth concepts developed. Internal review. Client presentation.', hrs:[0,1,0,0,0,10,2,2,0,0,0,0] },
+      { name:'Phase 2: Revisions & Production Files', timing:'~1 week', comment:'Refinements based on client feedback. Production-ready files for vendor.', hrs:[1,0,0,0,0,8,1,1,0,0,0,0] },
+    ]
+  },
+  naming: {
+    desc: 'Up to 12–20 name options with rationale. Includes cursory trademark and URL check.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Naming Exploration', timing:'~1 week', comment:'Category and competitor naming review. 12–20 name options with rationale. Internal review.', hrs:[0,4,0,0,0,2,8,2,0,0,0,0] },
+      { name:'Phase 2: Client Presentation & Refinement', timing:'~1 week', comment:'Present to client. Refine shortlisted names. Cursory trademark and URL check.', hrs:[0,2,0,0,0,1,4,1,0,0,0,0] },
+    ]
+  },
+  digital_campaign: {
+    desc: 'Campaign setup on up to 3 platforms. Monthly optimization, monitoring, and quarterly reporting.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Account access, platform setup, billing.', hrs:[3,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Strategy & Campaign Build', timing:'~2 weeks', comment:'Campaign strategy and structure. Audience setup. Ad group and campaign builds. Tracking verification.', hrs:[0,6,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Monthly: Optimization & Management', timing:'Monthly', comment:'Weekly performance monitoring. Bid and budget adjustments. A/B testing. Monthly reporting.', hrs:[2,4,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Quarterly Reporting', timing:'Quarterly', comment:'Full performance review. Insights and recommendations. Presentation to client.', hrs:[1,4,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  paid_media: {
+    desc: 'Paid media strategy document, blocking chart, and asset tracker across 3–4 platforms.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Research & Strategy', timing:'~2 weeks', comment:'Audience and platform research. Budget allocation strategy. Channel recommendations.', hrs:[0,10,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 2: Media Plan & Blocking Chart', timing:'~1 week', comment:'Full media plan document. Blocking chart. Asset tracker. Client presentation.', hrs:[0,8,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Revisions & Finalization', timing:'~3 days', comment:'Incorporate client feedback. Final plan delivery.', hrs:[0,4,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  owned_media: {
+    desc: 'Monthly email program, blog, or newsletter — strategy, design, and ongoing content creation.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Platform setup, audience list review, template creation.', hrs:[2,0,0,0,0,2,0,0,0,0,0,0] },
+      { name:'Phase 1: Strategy & Template Design', timing:'~2 weeks', comment:'Content strategy and pillar development. Email template design. Internal review and approval.', hrs:[0,4,0,0,0,6,4,1,0,0,0,0] },
+      { name:'Monthly: Content Creation & Deployment', timing:'Monthly', comment:'Monthly content calendar. Copywriting. Design. QA and deployment. Basic reporting.', hrs:[1,1,0,0,0,4,4,0,0,0,0,0] },
+    ]
+  },
+  social_content: {
+    desc: 'Monthly social media content creation, publishing, community management, and reporting.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Channel audit, scheduling setup, briefing templates.', hrs:[2,0,2,1,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Strategy & Content Pillars', timing:'~2 weeks', comment:'Content strategy, pillars, and tone of voice. Monthly content calendar framework.', hrs:[0,4,2,2,0,0,2,0,0,0,0,0] },
+      { name:'Monthly: Content Creation', timing:'Monthly', comment:'Monthly content calendar. Copy and creative for all posts. Internal review and scheduling.', hrs:[1,0,2,2,4,6,4,0,0,0,0,0] },
+      { name:'Monthly: Community Management & Reporting', timing:'Monthly', comment:'Daily community monitoring. Engagement and responses. Monthly performance report.', hrs:[0,0,2,2,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  social_influencer: {
+    desc: 'Influencer campaign management — shortlisting, contracting, briefing, management, and reporting. Influencer fees billed separately.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Campaign setup, briefing template, tracking spreadsheet.', hrs:[2,0,1,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Influencer Shortlist', timing:'~1 week', comment:'Category research. 10–20 shortlisted profiles with reach, engagement, and fit rationale.', hrs:[0,2,4,2,0,0,0,0,0,0,0,0] },
+      { name:'Phase 2: Contracting & Briefing', timing:'~1–2 weeks', comment:'Negotiate and contract influencers. Develop creative briefs. Approve content before posting.', hrs:[1,1,4,2,0,0,0,0,0,0,0,0] },
+      { name:'Phase 3: Campaign Management', timing:'Campaign duration', comment:'Content approval management. Posting coordination. Community monitoring during campaign.', hrs:[1,0,4,2,0,0,0,0,0,0,0,0] },
+      { name:'Phase 4: Reporting', timing:'~1 week post campaign', comment:'Performance data collection. Full campaign report with insights and recommendations.', hrs:[0,2,2,1,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  social_strategy: {
+    desc: 'Social media audit plus strategy. Includes content pillars, channel recommendations, KPIs, and platform setup guidance.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, channel access.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Audit', timing:'~1 week', comment:'Audit of existing channels. Competitive review. Audience analysis.', hrs:[0,3,4,2,0,0,0,0,0,0,0,0] },
+      { name:'Phase 2: Strategy Development', timing:'~2 weeks', comment:'Content pillars. Platform recommendations. Posting cadence. Tone of voice guidelines. KPI framework.', hrs:[0,4,4,2,0,0,2,0,0,0,0,0] },
+      { name:'Phase 3: Presentation & Finalization', timing:'~1 week', comment:'Client presentation. Revisions. Final strategy document delivery.', hrs:[0,2,2,1,0,0,1,0,0,0,0,0] },
+    ]
+  },
+  video: {
+    desc: 'Full video production — pre-production, shoot days, post-production, and editing. Talent, locations, and equipment quoted separately.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, vendor coordination.', hrs:[2,0,0,0,0,0,0,0,2,0,0,0] },
+      { name:'Phase 1: Pre-Production', timing:'~2–3 weeks', comment:'Creative brief. Shot list. Location scouting. Talent casting. Call sheet. Scheduling.', hrs:[0,2,0,0,0,4,2,2,0,8,0,0] },
+      { name:'Phase 2: Production (Shoot Day/s)', timing:'1–3 days', comment:'On-set direction. Day-of coordination. B-roll and hero footage capture.', hrs:[0,0,0,0,0,4,0,2,0,12,0,0] },
+      { name:'Phase 3: Post-Production', timing:'~2 weeks', comment:'Rough cut. Internal review. Client presentation. 2 revision rounds. Final master file.', hrs:[0,0,0,0,0,4,0,2,0,18,0,0] },
+      { name:'Misc. & Client Communication', timing:'', comment:'Ongoing communication and ad hoc requests.', hrs:[1,2,0,0,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  photography: {
+    desc: 'Product, lifestyle, or team photography including pre-production coordination, shoot day, and post-production editing.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, vendor coordination.', hrs:[2,0,0,0,0,0,0,0,0,2,0,0] },
+      { name:'Phase 1: Pre-Production', timing:'~1–2 weeks', comment:'Shot list development. Prop and location coordination. Talent briefing. Schedule.', hrs:[0,1,0,0,0,2,0,1,0,6,0,0] },
+      { name:'Phase 2: Shoot Day/s', timing:'1–2 days', comment:'On-set direction. Photo capture per approved shot list.', hrs:[0,0,0,0,0,2,0,1,0,8,0,0] },
+      { name:'Phase 3: Post-Production & Delivery', timing:'~1 week', comment:'Image selection and editing. 2 rounds retouching approvals. Final file delivery.', hrs:[0,0,0,0,0,2,0,1,0,8,0,0] },
+    ]
+  },
+  radio: {
+    desc: 'Radio spot production — script, production, talent, and music licensing. Standard 30-second format.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup.', hrs:[1,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Script Development', timing:'~1 week', comment:'Creative brief. 2 script options developed. Internal review. Client approval.', hrs:[0,1,0,0,0,0,4,2,0,0,0,0] },
+      { name:'Phase 2: Production', timing:'~1 week', comment:'Casting. Recording session. Music selection. Mix and master.', hrs:[0,0,0,0,0,0,0,1,0,8,0,0] },
+      { name:'Phase 3: Revisions & Delivery', timing:'~3 days', comment:'Client review. 1 revision round. Final master file delivery.', hrs:[0,0,0,0,0,0,1,1,0,3,0,0] },
+    ]
+  },
+  web_build: {
+    desc: 'Custom WordPress or Shopify website — one design concept, 2 revision rounds. Copywriting excluded unless noted.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, access, tooling.', hrs:[0,0,0,0,0,0,0,0,0,0,3,0] },
+      { name:'Phase 1: Discovery & Strategy', timing:'~2 weeks', comment:'Stakeholder interviews. Sitemap. IA and user flows. Content inventory. Tech requirements. Scope doc.', hrs:[0,4,0,0,0,0,0,0,0,0,4,8] },
+      { name:'Phase 2: Design — Wireframes', timing:'~2 weeks', comment:'Low-fidelity wireframes for key pages. Internal review. Client approval.', hrs:[0,0,0,0,0,20,0,4,0,0,4,0] },
+      { name:'Phase 3: Design — Visual Design', timing:'~3 weeks', comment:'High-fidelity designs for all pages. Internal review. Client presentation. 2 revision rounds.', hrs:[0,0,0,0,0,30,0,6,0,0,4,0] },
+      { name:'Phase 4: Development', timing:'~4 weeks', comment:'CMS build. All pages developed. Responsive across devices. Plugin integration.', hrs:[0,0,0,0,0,4,0,2,0,0,4,40] },
+      { name:'Phase 5: QA & Launch', timing:'~1 week', comment:'Cross-browser and device QA. Content entry. DNS transfer and launch. Post-launch monitoring.', hrs:[0,0,0,0,0,2,0,0,0,0,4,8] },
+      { name:'Misc. & Client Communication', timing:'', comment:'Ongoing client communication and ad hoc requests.', hrs:[0,2,0,0,0,0,0,0,0,0,2,0] },
+    ]
+  },
+  web_refresh: {
+    desc: 'Design and development updates to an existing site. New look without a full rebuild.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, CMS access.', hrs:[0,0,0,0,0,0,0,0,0,0,2,0] },
+      { name:'Phase 1: Audit & Scope', timing:'~1 week', comment:'Current site audit. Page inventory. Scope definition. What changes vs. stays.', hrs:[0,2,0,0,0,2,0,1,0,0,2,2] },
+      { name:'Phase 2: Design', timing:'~2 weeks', comment:'Refreshed visual design. Key page templates. Internal review. Client presentation. 2 revision rounds.', hrs:[0,0,0,0,0,20,0,4,0,0,2,0] },
+      { name:'Phase 3: Development', timing:'~2 weeks', comment:'Implement design changes across site. Responsive QA.', hrs:[0,0,0,0,0,2,0,1,0,0,2,16] },
+      { name:'Phase 4: QA & Launch', timing:'~3 days', comment:'Cross-browser QA. Content updates. Launch.', hrs:[0,0,0,0,0,1,0,0,0,0,2,4] },
+    ]
+  },
+  web_maintenance: {
+    desc: 'Ongoing CMS updates, plugin maintenance, health checks, and small content edits.',
+    phases: [
+      { name:'Monthly Maintenance', timing:'Monthly', comment:'Plugin and CMS updates. Security checks. Performance monitoring. Up to X hours of content updates.', hrs:[0,0,0,0,0,0,0,0,0,0,2,4] },
+      { name:'Quarterly Health Check', timing:'Quarterly', comment:'Full site audit. Speed and uptime review. Recommendations report.', hrs:[0,1,0,0,0,0,0,0,0,0,1,2] },
+    ]
+  },
+  web_audit: {
+    desc: 'Website discovery and strategy — sitemap, IA, conversion funnel, tech requirements, and scope document.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup.', hrs:[1,0,0,0,0,0,0,0,0,0,1,0] },
+      { name:'Phase 1: Discovery', timing:'~1 week', comment:'Stakeholder interviews. Analytics review. UX and content audit.', hrs:[0,2,0,0,0,2,0,1,0,0,2,4] },
+      { name:'Phase 2: Strategy & Recommendations', timing:'~2 weeks', comment:'Sitemap. IA. Conversion funnel mapping. Tech stack recommendations. Scope document.', hrs:[0,2,0,0,0,2,0,1,0,0,2,6] },
+      { name:'Phase 3: Presentation', timing:'~3 days', comment:'Client presentation. Revisions. Final strategy delivery.', hrs:[0,1,0,0,0,1,0,1,0,0,1,1] },
+    ]
+  },
+  agency_retainer: {
+    desc: 'Ongoing agency engagement — CMP, AOR, or fractional marketing support. Scoped monthly.',
+    phases: [
+      { name:'Monthly Retainer — Account Management', timing:'Monthly', comment:'Weekly client calls. Project coordination. Status reporting. Quarterly reviews.', hrs:[8,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Monthly Retainer — Strategy', timing:'Monthly', comment:'Monthly strategic reviews. Planning and recommendations.', hrs:[0,4,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Monthly Retainer — Creative', timing:'Monthly', comment:'Ongoing creative requests and asset development.', hrs:[0,0,0,0,0,8,4,2,0,0,0,0] },
+      { name:'Monthly Retainer — Digital / Social', timing:'Monthly', comment:'Social content, digital campaign management, reporting.', hrs:[0,0,2,2,0,0,0,0,0,0,0,0] },
+    ]
+  },
+  marketing_sprint: {
+    desc: 'Marketing strategy sprint — 8-step framework, 12-month calendar, and budget. 1 major + 1 minor revision.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, scheduling kick-off.', hrs:[2,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Discovery & Research', timing:'~2 weeks', comment:'Stakeholder interviews. Situation analysis. Market and competitive review. Audience research.', hrs:[0,12,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 2: Strategy Development', timing:'~2 weeks', comment:'Marketing strategy document. 12-month calendar. Budget framework. KPIs.', hrs:[0,16,0,0,0,0,2,0,0,0,0,0] },
+      { name:'Phase 3: Presentation & Revisions', timing:'~1 week', comment:'Client presentation. 1 major revision round. 1 minor round. Final delivery.', hrs:[0,6,0,0,0,0,1,0,0,0,0,0] },
+    ]
+  },
+  research: {
+    desc: 'Consumer research, concept testing, category research, or packaging research. Methodology varies by project.',
+    phases: [
+      { name:'Admin Set Up', timing:'', comment:'Project setup, screener development.', hrs:[2,0,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 1: Research Design', timing:'~1 week', comment:'Research brief. Methodology recommendation. Survey or discussion guide development.', hrs:[0,6,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 2: Field Work', timing:'~2–3 weeks', comment:'Participant recruitment. Survey or sessions in field. Data collection.', hrs:[0,4,0,0,0,0,0,0,0,0,0,0] },
+      { name:'Phase 3: Analysis & Report', timing:'~1–2 weeks', comment:'Data analysis. Insights report. Key findings and recommendations. Client presentation.', hrs:[0,10,0,0,0,0,2,0,0,0,0,0] },
+    ]
+  },
+};
+
+// ─── STATE ─────────────────────────────────────────────────────────────────────
+let currentSvc = null;
+let phases = [];        // [{name, timing, comment, hrs:[12 values]}, ...]
+let hardCosts = [];     // [{desc, qty, rate}, ...]
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+const fmt = n => '$' + Math.round(n).toLocaleString('en-CA');
+const num = v => parseFloat(v) || 0;
+
+function phaseTotal(p) {
+  return p.hrs.reduce((sum, h, i) => sum + h * ROLES[i].rate, 0);
+}
+function phaseHrs(p) {
+  return p.hrs.reduce((a, h) => a + h, 0);
+}
+function totalLabor() {
+  return phases.reduce((sum, p) => sum + phaseTotal(p), 0);
+}
+function totalHrs() {
+  return phases.reduce((sum, p) => sum + phaseHrs(p), 0);
+}
+function totalHardCosts() {
+  return hardCosts.reduce((sum, hc) => {
+    const markup = hc.markup != null ? hc.markup : 25;
+    return sum + num(hc.qty) * num(hc.rate) * (1 + markup / 100);
+  }, 0);
 }
 function totalCost() {
   return totalLabor() + totalHardCosts();
@@ -828,11 +1642,18 @@ function renderHardCosts() {
 function updateHCTotal(i) {
   const hc = hardCosts[i];
   const el = document.getElementById('hct_'+i);
-  if (el) el.textContent = hc.qty && hc.rate ? fmt(hc.qty * hc.rate * 1.25) + ' (incl. 25% markup)' : '—';
+  if (!el) return;
+  if (hc.qty && hc.rate) {
+    const markup = hc.markup != null ? hc.markup : 25;
+    const total = hc.qty * hc.rate * (1 + markup / 100);
+    el.textContent = fmt(total);
+  } else {
+    el.textContent = '—';
+  }
 }
 
 function addHardCost() {
-  hardCosts.push({ desc:'', qty:1, rate:0 });
+  hardCosts.push({ desc:'', qty:1, rate:0, markup:25 });
   renderHardCosts();
 }
 function deleteHC(i) {

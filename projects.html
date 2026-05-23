@@ -147,7 +147,19 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .ft-copy{font-size:11px;color:var(--text3)}
 </style>
 </head>
-<body>
+<body><script>
+(function(){
+  var pwd = sessionStorage.getItem('crew_auth');
+  if(pwd !== 'Crew2026') {
+    pwd = prompt('Enter password to access this tool:');
+    if(pwd !== 'Crew2026') {
+      document.body.innerHTML = '<div style="font-family:Helvetica Neue,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;background:#111110;color:#fff;font-size:14px">Incorrect password.</div>';
+      return;
+    }
+    sessionStorage.setItem('crew_auth', pwd);
+  }
+})();
+</script>
 
 <nav class="sitenav">
   <div class="nav-logo">

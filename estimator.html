@@ -176,6 +176,116 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:v
 footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;background:#fff;margin-top:3rem}
 .ft-logo{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--black)}
 .ft-copy{font-size:11px;color:var(--t3)}
+
+/* ── RATE MANAGEMENT PANEL ─────────────────────────────────────────────────── */
+.rates-toggle-btn{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--bs);background:#fff;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t2);cursor:pointer;transition:all .15s;margin-bottom:1rem}
+.rates-toggle-btn:hover{border-color:var(--black);color:var(--black)}
+.rates-toggle-btn.active{background:var(--black);border-color:var(--black);color:#fff}
+.rates-toggle-btn svg{transition:transform .2s}
+.rates-toggle-btn.active svg{transform:rotate(180deg)}
+.rates-panel{background:#fff;border:1px solid var(--border);margin-bottom:1.5rem;display:none}
+.rates-panel.open{display:block}
+.rates-panel-head{padding:1rem 1.25rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rates-panel-title{font-size:13px;font-weight:600;color:var(--black);letter-spacing:-.01em}
+.rates-panel-sub{font-size:11px;color:var(--t3)}
+.rates-reset-link{font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;padding:0;text-decoration:underline;white-space:nowrap}
+.rates-reset-link:hover{color:#c93b20}
+.rates-role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0;border-top:1px solid var(--border)}
+.rates-role-item{padding:1rem 1.25rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+.rates-role-item:nth-child(odd):last-child{border-right:none}
+.rri-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.rri-name{font-size:12px;font-weight:600;color:var(--black)}
+.rri-dept{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);font-weight:500}
+.rri-input-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.rri-prefix{font-size:13px;font-weight:500;color:var(--t2)}
+.rri-input{width:72px;padding:5px 8px;border:1px solid var(--bs);border-radius:var(--r);font-family:inherit;font-size:14px;font-weight:600;text-align:right;color:var(--black);background:#fff;outline:none;transition:border-color .12s,box-shadow .12s}
+.rri-input:focus{border-color:var(--black);box-shadow:0 0 0 3px rgba(17,17,16,.07)}
+.rri-input.modified{border-color:var(--accent);background:#fff9f8}
+.rri-suffix{font-size:11px;color:var(--t3)}
+.rri-signals{display:flex;flex-direction:column;gap:5px}
+.rri-signal{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px}
+.rri-signal-label{color:var(--t3);flex:1}
+.rri-signal-val{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rri-signal-val.sig-green{color:var(--green)}
+.rri-signal-val.sig-amber{color:var(--amber)}
+.rri-signal-val.sig-red{color:#c93b20}
+.rri-signal-val.sig-neutral{color:var(--t2)}
+.rri-rec-bar{height:2px;background:var(--mid);border-radius:1px;margin:8px 0 0;position:relative;overflow:visible}
+.rri-rec-range{position:absolute;height:100%;background:rgba(17,17,16,.12);border-radius:1px}
+.rri-rec-dot{position:absolute;width:8px;height:8px;border-radius:50%;top:50%;transform:translate(-50%,-50%)}
+.rri-rec-dot.dot-current{background:var(--black);border:2px solid #fff;box-shadow:0 0 0 1px var(--black)}
+.rri-rec-dot.dot-target{background:var(--green);border:2px solid #fff;box-shadow:0 0 0 1px var(--green)}
+.rri-tip{margin-top:9px;padding:7px 9px;background:var(--off);border-radius:2px;font-size:10.5px;line-height:1.5;color:var(--t2)}
+.rri-tip strong{color:var(--black)}
+.rates-legend{display:flex;gap:16px;padding:10px 1.25rem;border-top:1px solid var(--border);background:var(--off)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t3)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* ── SPREADSHEET GRID ──────────────────────────────────────────────────────── */
+.phases-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.phases-header{background:var(--black);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between}
+.phases-header h2{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#fff;margin:0}
+.add-phase-btn{padding:4px 11px;border-radius:2px;border:1px solid rgba(255,255,255,.2);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;font-family:inherit;transition:all .12s}
+.add-phase-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.grid-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.est-table{width:max-content;min-width:100%;border-collapse:collapse;table-layout:fixed}
+.est-table thead tr{background:var(--off)}
+.est-table thead th{padding:0;border-bottom:2px solid var(--border);border-right:1px solid var(--mid);white-space:nowrap;vertical-align:bottom}
+.est-table thead th:last-child{border-right:none}
+.th-phase{width:200px;min-width:160px;padding:.5rem .75rem;text-align:left}
+.th-phase-inner{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.th-role{width:76px;min-width:64px;padding:.35rem .4rem .5rem;text-align:center}
+.th-role-name{font-size:11px;font-weight:600;color:var(--black);display:block;line-height:1.2}
+.th-role-rate{font-size:9.5px;color:var(--t3);display:block;margin-top:1px}
+.th-total{width:92px;padding:.35rem .6rem .5rem;text-align:right;background:var(--off)}
+.th-total-inner{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
+.est-table tbody tr{border-bottom:1px solid var(--mid)}
+.est-table tbody tr:last-child{border-bottom:none}
+.est-table tbody tr:hover td{background:#fafaf8}
+.td-phase{padding:.45rem .75rem;vertical-align:top;border-right:1px solid var(--mid);min-width:160px}
+.phase-name{font-size:12.5px;font-weight:600;color:var(--black);background:none;border:none;font-family:inherit;outline:none;padding:1px 0;width:100%;display:block}
+.phase-name:focus{border-bottom:1px dashed var(--bs)}
+.phase-timing{font-size:10px;color:var(--t3);background:none;border:none;font-family:inherit;outline:none;width:100%;display:block;margin-top:2px;padding:0}
+.phase-timing:focus{border-bottom:1px dashed var(--bs)}
+.phase-comment-toggle{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-size:10px;color:var(--t3);cursor:pointer;background:none;border:none;font-family:inherit;padding:0;line-height:1.3;transition:color .1s}
+.phase-comment-toggle:hover{color:var(--t2)}
+.phase-comment-area{margin-top:4px;display:none}
+.phase-comment-area.open{display:block}
+.phase-comment{font-size:10.5px;color:var(--t2);line-height:1.5;padding:3px 5px;background:var(--off);border:none;border-radius:2px;width:100%;resize:vertical;font-family:inherit;min-height:28px}
+.phase-comment:focus{outline:1px solid var(--bs)}
+.del-phase{float:right;background:none;border:none;cursor:pointer;color:var(--t3);font-size:12px;padding:1px 3px;line-height:1;margin-left:4px;transition:color .1s}
+.del-phase:hover{color:var(--accent)}
+.td-hrs{padding:.35rem .25rem;text-align:center;vertical-align:middle;border-right:1px solid var(--mid)}
+.role-input{width:54px;padding:4px 4px;border:1px solid transparent;border-radius:2px;font-size:12px;font-family:inherit;text-align:center;background:transparent;color:var(--black);transition:all .1s;display:block;margin:0 auto}
+.role-input:hover{border-color:var(--mid);background:var(--off)}
+.role-input:focus{outline:none;border-color:var(--bs);background:#fff}
+.role-input.has-val{font-weight:600}
+.role-input.no-val{color:var(--t3)}
+.td-total{padding:.4rem .6rem;text-align:right;vertical-align:middle;background:#fafaf8;border-left:1px solid var(--border)}
+.td-total-hrs{font-size:10px;color:var(--t3);display:block;margin-bottom:1px}
+.td-total-cost{font-size:12.5px;font-weight:600;color:var(--black);font-variant-numeric:tabular-nums;display:block}
+.est-table tfoot tr{background:var(--off);border-top:2px solid var(--border)}
+.est-table tfoot td{padding:.4rem .25rem;text-align:center;font-size:11px;border-right:1px solid var(--mid)}
+.est-table tfoot td:last-child{border-right:none}
+.tf-label{padding:.4rem .75rem;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);text-align:left;border-right:1px solid var(--mid)}
+.tf-total{padding:.4rem .6rem;text-align:right;background:#f0efe9;border-left:1px solid var(--border)}
+.tf-total-hrs{font-size:10px;color:var(--t2);display:block}
+.tf-total-cost{font-size:13px;font-weight:700;color:var(--black);display:block}
+
+/* EXPENSE SUGGESTIONS */
+.expense-suggestions{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;display:none}
+.exp-sug-head{background:var(--black);padding:.625rem 1rem;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius) var(--radius) 0 0}
+.exp-sug-head h3{font-size:11px;font-weight:600;letter-spacing:.05em;color:#fff;margin:0;text-transform:uppercase}
+.exp-sug-stat{font-size:10px;color:rgba(255,255,255,.55)}
+.exp-sug-list{padding:.5rem 0}
+.exp-sug-item{display:flex;align-items:flex-start;gap:.5rem;padding:.45rem 1rem;border-bottom:1px solid var(--mid)}
+.exp-sug-item:last-child{border-bottom:none}
+.exp-sug-info{flex:1;min-width:0}
+.exp-sug-name{font-size:12px;font-weight:500;color:var(--black);line-height:1.3}
+.exp-sug-typical{font-size:11px;color:var(--accent);font-weight:600;margin-top:1px}
+.exp-sug-note{font-size:11px;color:var(--t3);margin-top:2px;line-height:1.3}
+.exp-sug-add{flex-shrink:0;background:var(--off);border:1px solid var(--mid);border-radius:4px;font-size:11px;font-weight:600;color:var(--black);padding:3px 10px;cursor:pointer;white-space:nowrap;margin-top:2px;transition:background .15s}
+.exp-sug-add:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 </style>
 </head>
 <body><script>
@@ -269,6 +379,33 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
     </div>
   </div>
 
+  <!-- RATE MANAGEMENT TOGGLE -->
+  <button class="rates-toggle-btn" id="ratesToggleBtn" onclick="toggleRatesPanel()">
+    <svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 1v1.5M6.5 10.5V12M12 6.5h-1.5M2.5 6.5H1M10.3 2.7l-1.06 1.06M3.76 9.24L2.7 10.3M10.3 10.3L9.24 9.24M3.76 3.76L2.7 2.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    Adjust billing rates
+    <span id="ratesModifiedBadge" style="display:none;background:var(--accent);color:#fff;font-size:9px;padding:1px 6px;border-radius:8px;letter-spacing:.04em">CUSTOM</span>
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <!-- RATE MANAGEMENT PANEL -->
+  <div class="rates-panel" id="ratesPanel">
+    <div class="rates-panel-head">
+      <div>
+        <div class="rates-panel-title">Billing Rate Configuration</div>
+        <div class="rates-panel-sub">Rates apply to this estimate only. Recommendations are based on 2026 actuals &amp; Workamajig data.</div>
+      </div>
+      <button class="rates-reset-link" onclick="resetAllRates()">Reset to defaults</button>
+    </div>
+    <div class="rates-role-grid" id="ratesRoleGrid">
+      <!-- populated by JS -->
+    </div>
+    <div class="rates-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--black)"></div> Your current rate</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Avg billed 2025–26</div>
+      <div class="legend-item" style="color:var(--t3);font-size:10px;margin-left:auto">Signals derived from Rates.xlsx &amp; Workamajig (Jan 2025–Jun 2026) · Internal costs not shown</div>
+    </div>
+  </div>
+
   <!-- EMPTY STATE -->
   <div class="empty-estimator" id="emptyState">
     <h3>No service selected</h3>
@@ -327,10 +464,16 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
     <div>
       <div class="phases-wrap" id="phasesWrap">
         <div class="phases-header">
-          <h2 id="phasesTitle">Phase Breakdown</h2>
+          <h2 id="phasesTitle">Scope Breakdown</h2>
           <button class="add-phase-btn" onclick="addPhase()">+ Add phase</button>
         </div>
-        <div id="phasesBody"></div>
+        <div class="grid-scroll">
+          <table class="est-table">
+            <thead id="estHead"></thead>
+            <tbody id="phasesBody"></tbody>
+            <tfoot id="estFoot"></tfoot>
+          </table>
+        </div>
       </div>
       <div class="actions">
         <button class="save-btn" id="saveBtn" onclick="saveTocampaign()" disabled>Save to Campaign ↓</button>
@@ -346,6 +489,16 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       <div class="role-summary">
         <div class="panel-head">Hours by role</div>
         <div id="roleSummary"></div>
+      </div>
+
+
+      <!-- EXPENSE SUGGESTIONS -->
+      <div class="expense-suggestions" id="expenseSuggestions">
+        <div class="exp-sug-head">
+          <h3>Suggested external expenses</h3>
+          <span class="exp-sug-stat" id="expSugStat"></span>
+        </div>
+        <div class="exp-sug-list" id="expSugList"></div>
       </div>
 
       <!-- HARD COSTS -->
@@ -399,25 +552,159 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 <script>
 
 // ─── ROLES & RATES ────────────────────────────────────────────────────────────
-const ROLES = [
-  { id:'pm',    name:'Project Manager',              rate:160, dept:'Account' },
-  { id:'strat', name:'Strategist',                   rate:180, dept:'Account' },
-  { id:'socmgr',name:'Social Media Manager',         rate:160, dept:'Social'  },
-  { id:'socsp', name:'Social Media Specialist',      rate:150, dept:'Social'  },
-  { id:'content',name:'Content Creator',             rate:150, dept:'Social'  },
-  { id:'ad',    name:'AD / Design',                  rate:160, dept:'Creative'},
-  { id:'copy',  name:'Copywriter',                   rate:160, dept:'Creative'},
-  { id:'ecd',   name:'Executive Creative Director',  rate:180, dept:'Creative'},
-  { id:'cco',   name:'Creative CCO',                 rate:200, dept:'Creative'},
-  { id:'prod',  name:'Producer',                     rate:180, dept:'Studios' },
-  { id:'webpm', name:'Web Project Manager',          rate:160, dept:'Web'     },
-  { id:'webst', name:'Web Strategy / Dev',           rate:160, dept:'Web'     },
-];
+// Default billing rates (can be overridden via the Rate Management panel)
+const DEFAULT_RATES = {
+  pm:160, strat:180, socmgr:160, socsp:150, content:150,
+  ad:160, copy:160, ecd:180, cco:200, prod:180, webpm:160, webst:160
+};
+// Live rates object — mutated by the rate management UI
+const LIVE_RATES = Object.assign({}, DEFAULT_RATES);
 
-// Cost rate (internal) vs billing rate
+const ROLES = [
+  { id:'pm',     name:'Project Manager',              dept:'Account' },
+  { id:'strat',  name:'Strategist',                   dept:'Account' },
+  { id:'socmgr', name:'Social Media Manager',         dept:'Social'  },
+  { id:'socsp',  name:'Social Media Specialist',      dept:'Social'  },
+  { id:'content',name:'Content Creator',              dept:'Social'  },
+  { id:'ad',     name:'AD / Design',                  dept:'Creative'},
+  { id:'copy',   name:'Copywriter',                   dept:'Creative'},
+  { id:'ecd',    name:'Executive Creative Director',  dept:'Creative'},
+  { id:'cco',    name:'Creative CCO',                 dept:'Creative'},
+  { id:'prod',   name:'Producer',                     dept:'Studios' },
+  { id:'webpm',  name:'Web Project Manager',          dept:'Web'     },
+  { id:'webst',  name:'Web Strategy / Dev',           dept:'Web'     },
+].map(r => Object.defineProperty(r, 'rate', {
+  get(){ return LIVE_RATES[r.id]; },
+  enumerable: true
+}));
+
+// Cost rate (internal) — used only for GPM calculation, never displayed
+// Source: Rates.xlsx (corrected June 2026), avg where multiple staff per role
 const COST_RATES = {
-  pm:60, strat:70, socmgr:55, socsp:45, content:50,
-  ad:60, copy:55, ecd:90, cco:100, prod:75, webpm:60, webst:65
+  pm:41.6,    // avg: Caroline(41.67), Chelsea(42.10), Erin(40.97)
+  strat:91.2, // Nate Douglas
+  socmgr:46.6,// Taylor Matuschewski
+  socsp:39.3, // Brandon Meyer
+  content:39.2,// Jeromi Muller
+  ad:39.4,    // avg: Christopher(39.97), Morgan(46.70), Janice(31.53)
+  copy:42.0,  // Annaliese Meyer
+  ecd:64.9,   // Rachel Latkolik
+  cco:106.6,  // Gerald Schoenhoff
+  prod:50.5,  // Sahba Kalili
+  webpm:55.3, // avg: Abraham(60.16), Susie(50.37)
+  webst:50.4  // no direct staff match — retained prior estimate
+};
+
+// ─── RATE INSIGHTS (source: Rates.xlsx corrected June 2026) ───────────────────
+// avgBilledWMJ: 2025-2026 blended weighted avg billed rate from Workamajig
+//   (2025 full year weighted 75%, 2026 Jan-Apr weighted 25%; rounded to nearest $5)
+// gp47rate: rate required for 47% GP at target utilisation (from Rates.xlsx)
+// gp47unrealistic: true when rate >$250 — driven by low target hrs, not a pricing signal
+// marketRange: shown instead when gp47unrealistic is true
+// NOTE: internal costs are NOT stored here — only externally-visible insights
+const RATE_INSIGHTS = {
+  pm: {
+    avgBilledWMJ: 160,   // $158.6 — PM: WMJ 2025-2026 blended weighted
+    gp47rate: 136,        // avg: Caroline(136), Chelsea(133), Erin(139)
+    staffCount: 3,
+    tip: 'Three PMs averaging $160/hr on a 2025–26 blended basis. The 47% GP target is ~$136/hr — your default of $160 sits right at actuals. Rates in the $155–170 range are well-supported.',
+    suggestedMin: 155,
+    suggestedMax: 175
+  },
+  strat: {
+    avgBilledWMJ: 175,   // $173.3 — Mktg Strategy & Insights - Director
+    gp47rate: 544,        // Nate: 15 hrs/wk target — low utilization inflates this
+    gp47unrealistic: true,
+    marketRange: [175, 225],
+    staffCount: 1,
+    tip: 'VP Strategy averaging $175/hr billed on a 2025–26 blended basis. The fully-loaded GP target is inflated by low target utilization (15 hrs/wk) and is not a useful pricing guide. Senior strategy roles in Canadian agencies typically bill $175–$225/hr.',
+    suggestedMin: 175,
+    suggestedMax: 225
+  },
+  socmgr: {
+    avgBilledWMJ: 155,   // $153.5 — Social Media Management
+    gp47rate: 178,        // Taylor: needs $178/hr to hit 47% GP
+    staffCount: 1,
+    tip: 'Social Media Manager averaging $155/hr on a 2025–26 blended basis, below the $178/hr GP target. Your default of $160 partially closes that gap — consider $165–175 to improve margin on social management work.',
+    suggestedMin: 160,
+    suggestedMax: 175
+  },
+  socsp: {
+    avgBilledWMJ: 150,   // $147.8 — Social Media Execution
+    gp47rate: 119,        // Brandon: only needs $119/hr for 47% GP
+    staffCount: 1,
+    tip: 'Social Specialist averaging $150/hr on a 2025–26 blended basis — comfortably above the $119/hr GP target. Your default of $150 aligns exactly with actuals and delivers healthy margin.',
+    suggestedMin: 145,
+    suggestedMax: 160
+  },
+  content: {
+    avgBilledWMJ: 155,   // $153.8 — Content Creation
+    gp47rate: 115,        // Jeromi: only needs $115/hr for 47% GP
+    staffCount: 1,
+    tip: 'Content Creator averaging $155/hr on a 2025–26 blended basis, well above the $115/hr GP target. Your default of $150 is slightly under actuals; $155–160 would better reflect what clients are paying.',
+    suggestedMin: 150,
+    suggestedMax: 165
+  },
+  ad: {
+    avgBilledWMJ: 160,   // $160.6 — avg: Design(163.8), Art Direction(157.4)
+    gp47rate: 120,        // avg: Christopher(124), Morgan(143), Janice(94)
+    staffCount: 3,
+    tip: 'Design/AD averaging $160/hr on a 2025–26 blended basis (Design $164, Art Direction $157). GP target is low (~$120/hr avg) — the role has strong margin at current rates. Your default of $160 is right on actuals.',
+    suggestedMin: 155,
+    suggestedMax: 175
+  },
+  copy: {
+    avgBilledWMJ: 165,   // $167.0 — Copywriting
+    gp47rate: 124,        // Annaliese: needs $124/hr for 47% GP
+    staffCount: 1,
+    tip: 'Copywriter averaging $165/hr on a 2025–26 blended basis — well above the $124/hr GP target. Your default of $160 is slightly conservative vs. actuals; $165 would more accurately match what clients are being billed.',
+    suggestedMin: 155,
+    suggestedMax: 170
+  },
+  ecd: {
+    avgBilledWMJ: 170,   // $170.9 — Executive Creative Director
+    gp47rate: 266,        // Rachel: 22.5 hrs/wk target inflates this
+    gp47unrealistic: true,
+    marketRange: [175, 225],
+    staffCount: 1,
+    tip: 'ECD averaging $170/hr on a 2025–26 blended basis. The GP target is inflated by partial utilization (22.5 hrs/wk) and is not a reliable pricing guide. ECD-level creative direction in Canadian agencies typically positions at $175–$225/hr.',
+    suggestedMin: 175,
+    suggestedMax: 225
+  },
+  cco: {
+    avgBilledWMJ: 185,   // $182.8 — Creative Direction - CCO
+    gp47rate: 646,        // Gerald: 15 hrs/wk target — not a pricing signal
+    gp47unrealistic: true,
+    marketRange: [200, 250],
+    staffCount: 1,
+    tip: 'CCO averaging $185/hr on a 2025–26 blended basis. The fully-loaded GP target is driven by very low target billable hours (15 hrs/wk) and has no practical use as a rate guide. Senior creative leadership in Canadian agencies typically bills $200–$250/hr.',
+    suggestedMin: 200,
+    suggestedMax: 250
+  },
+  prod: {
+    avgBilledWMJ: 165,   // $165.7 — Producing
+    gp47rate: 225,        // Sahba: 19.5 hrs/wk target
+    staffCount: 1,
+    tip: 'Producer averaging $165/hr on a 2025–26 blended basis. The GP target of $225/hr reflects partial utilization (19.5 hrs/wk) — achievable but requires careful scoping. Your default of $180 is a reasonable balance; $200+ on premium productions is supportable.',
+    suggestedMin: 175,
+    suggestedMax: 210
+  },
+  webpm: {
+    avgBilledWMJ: 155,   // $154.2 — Web Project Management
+    gp47rate: 190,        // avg: Abraham(215), Susie(165)
+    staffCount: 2,
+    tip: 'Web PMs averaging $155/hr on a 2025–26 blended basis, and the GP target is $190/hr avg. Your default of $160 is above actuals but below the GP threshold — consider $165–170 to improve margin on web project management.',
+    suggestedMin: 165,
+    suggestedMax: 180
+  },
+  webst: {
+    avgBilledWMJ: null,  // no WMJ role entry in Workamajig or Rates.xlsx
+    gp47rate: null,
+    staffCount: 0,
+    tip: 'No WMJ role entry for Web Strategy/Dev. Your default of $160 is a reasonable estimate — review against current project actuals to calibrate.',
+    suggestedMin: 150,
+    suggestedMax: 170
+  }
 };
 
 // ─── HISTORICAL DATA (p25, median, p75 billed — from project data) ────────────
@@ -690,6 +977,237 @@ const TEMPLATES = {
   },
 };
 
+const EXPENSE_TYPES = {
+  brand_strategy: {
+    pct: 40,  // % of real projects that had external expenses
+    medianExp: 6245,
+    items: [
+      { name: "Research panel / concept testing", typical: "$5,000\u2013$18,000", note: "Optional; ~40% of brand strategy projects include consumer research" },
+      { name: "Stock photography", typical: "$500\u2013$2,000", note: "For identity direction boards and guidelines" },
+      { name: "Font licenses", typical: "$300\u2013$1,500", note: "If new typeface is selected as part of identity system" },
+      { name: "Translation (French)", typical: "$500\u2013$2,000", note: "If bilingual brand materials required" },
+    ]
+  },
+  campaign_strategy: {
+    pct: 42,  // % of real projects that had external expenses
+    medianExp: 11213,
+    items: [
+      { name: "Research / concept testing", typical: "$8,000\u2013$20,000", note: "Optional pre-clearance or consumer validation; ~42% of projects include" },
+      { name: "ASC pre-clearance fee", typical: "$300\u2013$600", note: "Required for broadcast advertising in Canada" },
+      { name: "Stock photography / video", typical: "$500\u2013$2,000", note: "For concept boards and territory decks" },
+    ]
+  },
+  campaign_rollout: {
+    pct: 47,  // % of real projects that had external expenses
+    medianExp: 6875,
+    items: [
+      { name: "Media spend (pass-through)", typical: "$10,000\u2013$100,000+", note: "Billed directly from Facebook/Google; ~47% of rollout projects" },
+      { name: "Video/photography production", typical: "$5,000\u2013$30,000", note: "If production assets are part of rollout scope" },
+      { name: "Printing & signage", typical: "$1,000\u2013$8,000", note: "For in-store/OOH assets" },
+      { name: "ASC pre-clearance", typical: "$300\u2013$600", note: "For broadcast or radio ads" },
+      { name: "Translation", typical: "$500\u2013$3,000", note: "French adaptation of campaign assets" },
+    ]
+  },
+  packaging: {
+    pct: 32,  // % of real projects that had external expenses
+    medianExp: 1260,
+    items: [
+      { name: "Translation & regulatory review", typical: "$500\u2013$2,500", note: "Bilingual labelling and regulatory compliance; common on ~32% of packaging projects" },
+      { name: "Custom illustration", typical: "$1,500\u2013$6,000", note: "If illustration is part of the design direction" },
+      { name: "3D rendering / mockup service", typical: "$400\u2013$1,500", note: "High-fidelity product renders for retailer presentations" },
+      { name: "Print coordination / press check", typical: "$500\u2013$2,000", note: "Vendor sourcing, quotes, press check attendance" },
+    ]
+  },
+  brand_guidelines: {
+    pct: 22,  // % of real projects that had external expenses
+    medianExp: 1928,
+    items: [
+      { name: "Font license", typical: "$300\u2013$1,500", note: "If a new typeface is specified in the guidelines" },
+      { name: "Translation", typical: "$500\u2013$1,500", note: "French version of guidelines document" },
+    ]
+  },
+  presentation_deck: {
+    pct: 67,  // % of real projects that had external expenses
+    medianExp: 3964,
+    items: [
+      { name: "Printing & binding", typical: "$500\u2013$3,000", note: "Physical copies for sales presentations or events; ~67% of decks have print expenses" },
+      { name: "Stock photography", typical: "$300\u2013$1,000", note: "Licensed imagery for slides" },
+    ]
+  },
+  single_execution: {
+    pct: 30,  // % of real projects that had external expenses
+    medianExp: 2403,
+    items: [
+      { name: "Printing", typical: "$500\u2013$5,000", note: "Sell sheets, flyers, brochures, signage; ~30% of projects include print costs" },
+      { name: "Stock photography", typical: "$200\u2013$800", note: "Licensed images for the deliverable" },
+      { name: "Mail distribution", typical: "$1,000\u2013$5,000", note: "Canada Post or courier for direct mail pieces" },
+    ]
+  },
+  tradeshow: {
+    pct: 55,  // % of real projects that had external expenses
+    medianExp: 1387,
+    items: [
+      { name: "Printing & hardware", typical: "$1,000\u2013$4,000", note: "Backdrop printing, pop-up hardware; ~55% of tradeshow projects include" },
+      { name: "Shipping & logistics", typical: "$300\u2013$1,500", note: "Shipping booth to venue" },
+    ]
+  },
+  naming: {
+    pct: 60,  // % of real projects that had external expenses
+    medianExp: 2810,
+    items: [
+      { name: "Trademark / domain search", typical: "$500\u2013$3,000", note: "Legal cursory trademark search; domain registration; ~60% of naming projects include" },
+      { name: "Translation vetting", typical: "$300\u2013$800", note: "French or other language clearance for chosen name" },
+    ]
+  },
+  digital_campaign: {
+    pct: 32,  // % of real projects that had external expenses
+    medianExp: 3420,
+    items: [
+      { name: "Media spend (pass-through)", typical: "$1,000\u2013$20,000/mo", note: "Billed directly from Meta/Google; not included in Crew fees" },
+      { name: "Platform/tool subscriptions", typical: "$100\u2013$500/mo", note: "e.g. Sprout Social, StackAdapt, SEMrush" },
+    ]
+  },
+  paid_media: {
+    pct: 36,  // % of real projects that had external expenses
+    medianExp: 15000,
+    items: [
+      { name: "Media spend (pass-through)", typical: "$5,000\u2013$100,000+", note: "Billed directly by media platform; ~36% of projects route through Crew" },
+      { name: "Creative production (video/display)", typical: "$2,000\u2013$15,000", note: "If Crew manages production of paid media assets" },
+    ]
+  },
+  owned_media: {
+    pct: 52,  // % of real projects that had external expenses
+    medianExp: 2880,
+    items: [
+      { name: "Email platform (ESP) subscription", typical: "$100\u2013$500/mo", note: "e.g. Mailchimp, Klaviyo, HubSpot \u2014 if Crew manages account" },
+      { name: "Stock photography", typical: "$300\u2013$1,000", note: "Licensed images for email templates" },
+      { name: "Translation", typical: "$300\u2013$1,500", note: "French email versions" },
+    ]
+  },
+  social_content: {
+    pct: 75,  // % of real projects that had external expenses
+    medianExp: 2921,
+    items: [
+      { name: "Boosting / paid amplification", typical: "$500\u2013$5,000/mo", note: "~75% of social content projects include boosting spend" },
+      { name: "Stock photography / video footage", typical: "$500\u2013$2,000", note: "Licensed assets for content creation" },
+      { name: "Social publishing platform", typical: "$100\u2013$300/mo", note: "e.g. Sprout Social \u2014 if Crew manages account" },
+      { name: "UGC content creator fees", typical: "$2,000\u2013$10,000", note: "If UGC is part of content strategy" },
+    ]
+  },
+  social_influencer: {
+    pct: 84,  // % of real projects that had external expenses
+    medianExp: 6500,
+    items: [
+      { name: "Influencer talent fees", typical: "$5,000\u2013$80,000+", note: "~84% of influencer projects \u2014 the primary hard cost; varies widely by tier" },
+      { name: "Product seeding / shipping", typical: "$300\u2013$2,000", note: "Product procurement and shipping to influencers" },
+      { name: "Whitelisting / paid amplification", typical: "$2,000\u2013$10,000", note: "Boosting influencer content through paid channels" },
+    ]
+  },
+  social_strategy: {
+    pct: 33,  // % of real projects that had external expenses
+    medianExp: 1530,
+    items: [
+      { name: "Social analytics tool", typical: "$100\u2013$400", note: "Sprout Social or similar for audit data" },
+      { name: "Competitor research tool", typical: "$200\u2013$500", note: "e.g. Iconosquare, Brandwatch for benchmark data" },
+    ]
+  },
+  video: {
+    pct: 77,  // % of real projects that had external expenses
+    medianExp: 18539,
+    items: [
+      { name: "Videography / crew", typical: "$5,000\u2013$50,000", note: "~77% of video projects \u2014 photographer, director, crew, equipment" },
+      { name: "Studio rental", typical: "$1,000\u2013$5,000/day", note: "Studio space for controlled shoots" },
+      { name: "Talent / casting", typical: "$1,000\u2013$10,000", note: "On-screen talent, voice-over, hand models" },
+      { name: "Stock music license", typical: "$300\u2013$2,000", note: "Music licensing for video" },
+      { name: "Motion graphics / animation", typical: "$2,000\u2013$15,000", note: "If animation is part of the video scope" },
+    ]
+  },
+  photography: {
+    pct: 69,  // % of real projects that had external expenses
+    medianExp: 10274,
+    items: [
+      { name: "Photographer / crew", typical: "$3,000\u2013$20,000", note: "~69% of photography projects \u2014 photographer, assistant, equipment" },
+      { name: "Studio / location rental", typical: "$500\u2013$3,000/day", note: "Studio space or location scouting/permits" },
+      { name: "Prop styling / food styling", typical: "$500\u2013$3,000", note: "Props, food prep, styling assistant" },
+      { name: "Talent / models", typical: "$500\u2013$5,000", note: "On-camera talent if lifestyle photography" },
+      { name: "Retouching (advanced)", typical: "$500\u2013$2,000", note: "If beyond standard edit pass" },
+    ]
+  },
+  radio: {
+    pct: 100,  // % of real projects that had external expenses
+    medianExp: 7219,
+    items: [
+      { name: "Voice talent", typical: "$1,000\u2013$5,000", note: "~100% of radio projects include talent fees" },
+      { name: "Recording studio", typical: "$500\u2013$2,000", note: "Studio time for recording and mixing" },
+      { name: "Music license", typical: "$500\u2013$3,000", note: "Licensed music bed or jingle" },
+      { name: "ASC clearance fee", typical: "$300\u2013$600", note: "Required for Canadian broadcast" },
+      { name: "Media buy (trafficking)", typical: "$2,000\u2013$12,000", note: "Broadcast or streaming placement costs" },
+    ]
+  },
+  web_build: {
+    pct: 89,  // % of real projects that had external expenses
+    medianExp: 4039,
+    items: [
+      { name: "Plugin / theme licenses", typical: "$200\u2013$1,500", note: "~89% of web builds include third-party plugins" },
+      { name: "Stock photography", typical: "$500\u2013$3,000", note: "Hero images and supporting photography" },
+      { name: "Hosting setup", typical: "$200\u2013$1,000", note: "First-year hosting or migration costs" },
+      { name: "Translation", typical: "$1,000\u2013$5,000", note: "French/bilingual website content" },
+      { name: "Accessibility audit (third-party)", typical: "$500\u2013$2,000", note: "WCAG compliance verification" },
+    ]
+  },
+  web_refresh: {
+    pct: 78,  // % of real projects that had external expenses
+    medianExp: 7820,
+    items: [
+      { name: "Theme / plugin purchase", typical: "$200\u2013$1,000", note: "~78% of refreshes involve new theme or plugin costs" },
+      { name: "Stock photography", typical: "$300\u2013$1,500", note: "Updated imagery for refreshed site" },
+      { name: "Hosting migration", typical: "$200\u2013$600", note: "If moving servers as part of refresh" },
+    ]
+  },
+  web_maintenance: {
+    pct: 50,  // % of real projects that had external expenses
+    medianExp: 630,
+    items: [
+      { name: "Plugin / software renewals", typical: "$100\u2013$500/yr", note: "Annual plugin license renewals" },
+      { name: "Stock image updates", typical: "$100\u2013$500", note: "Occasional image refreshes" },
+    ]
+  },
+  web_audit: {
+    pct: 33,  // % of real projects that had external expenses
+    medianExp: 1080,
+    items: [
+      { name: "SEO tool subscription", typical: "$200\u2013$500", note: "e.g. SEMrush, Ahrefs for keyword and audit data" },
+      { name: "User testing platform", typical: "$300\u2013$1,000", note: "e.g. UserTesting, Hotjar for UX research" },
+    ]
+  },
+  agency_retainer: {
+    pct: 51,  // % of real projects that had external expenses
+    medianExp: 2301,
+    items: [
+      { name: "Ad spend (pass-through)", typical: "$1,000\u2013$10,000/mo", note: "Media spend managed on client behalf; ~51% of retainers include" },
+      { name: "Software subscriptions", typical: "$200\u2013$800/mo", note: "Tools managed as part of retainer (Sprout, HubSpot, etc.)" },
+      { name: "Travel & client meetings", typical: "$500\u2013$3,000", note: "Occasional in-person travel expenses" },
+    ]
+  },
+  marketing_sprint: {
+    pct: 29,  // % of real projects that had external expenses
+    medianExp: 3318,
+    items: [
+      { name: "Research panel (light)", typical: "$2,000\u2013$8,000", note: "Optional consumer validation; ~29% of marketing sprints include" },
+      { name: "Workshop materials / venue", typical: "$200\u2013$1,000", note: "If in-person discovery session is held" },
+    ]
+  },
+  research: {
+    pct: 50,  // % of real projects that had external expenses
+    medianExp: 8096,
+    items: [
+      { name: "Research panel / fieldwork", typical: "$8,000\u2013$25,000", note: "~50\u201372% of research projects \u2014 the primary hard cost" },
+      { name: "Research platform", typical: "$500\u2013$2,000", note: "e.g. DesignAnalytics, Dynata, or Qualtrics" },
+      { name: "Incentives / honoraria", typical: "$500\u2013$3,000", note: "Participant incentives if custom recruitment" },
+    ]
+  },
+};
+
 // ─── STATE ─────────────────────────────────────────────────────────────────────
 let currentSvc = null;
 let phases = [];        // [{name, timing, comment, hrs:[12 values]}, ...]
@@ -749,6 +1267,7 @@ function loadTemplate() {
   showEstimator();
   renderPhases();
   renderHardCosts();
+  renderExpenseSuggestions(svc);
   updateSummary();
 }
 
@@ -777,46 +1296,108 @@ function resetEstimator() {
 }
 
 // ─── RENDER PHASES ────────────────────────────────────────────────────────────
-function renderPhases() {
-  const body = document.getElementById('phasesBody');
-  body.innerHTML = phases.map((p, pi) => `
-    <div class="phase-row" id="phase_${pi}">
-      <div class="phase-name-row">
-        <input class="phase-name" value="${esc(p.name)}"
-          oninput="phases[${pi}].name=this.value">
-        <input class="phase-timing" value="${esc(p.timing)}" placeholder="timing"
-          oninput="phases[${pi}].timing=this.value">
-        <button class="del-phase" onclick="deletePhase(${pi})" title="Remove phase">✕</button>
-      </div>
-      <textarea class="phase-comment" rows="2"
-        oninput="phases[${pi}].comment=this.value">${esc(p.comment)}</textarea>
-      <div class="roles-grid">
-        ${ROLES.map((r, ri) => `
-          <div class="role-row">
-            <span class="role-name">${r.name} <span style="color:var(--t3)">(${fmt(r.rate)}/hr)</span></span>
-            <input class="role-input" type="number" min="0" step="0.5"
-              value="${p.hrs[ri] || ''}"
-              placeholder="0"
-              oninput="phases[${pi}].hrs[${ri}]=parseFloat(this.value)||0;updateSummary();updatePhaseTotal(${pi})">
-            <span class="role-cost" id="rc_${pi}_${ri}">${p.hrs[ri] ? fmt(p.hrs[ri] * r.rate) : '—'}</span>
-          </div>`).join('')}
-      </div>
-      <div class="phase-total-row">
-        <span class="phase-total-hrs" id="pth_${pi}">${phaseHrs(p).toFixed(1)} hrs</span>
-        <span class="phase-total-cost" id="ptc_${pi}">${fmt(phaseTotal(p))}</span>
-      </div>
-    </div>`).join('');
+
+function setRoleInputClass(el) {
+  el.className = 'role-input ' + (el.value ? 'has-val' : 'no-val');
 }
+
+function renderPhases() {
+  const head = document.getElementById('estHead');
+  const body = document.getElementById('phasesBody');
+  const foot = document.getElementById('estFoot');
+
+  // Header: role columns
+  head.innerHTML = '<tr>' +
+    '<th class="th-phase"><div class="th-phase-inner">Phase</div></th>' +
+    ROLES.map(r =>
+      '<th class="th-role">' +
+      '<span class="th-role-name">' + r.name + '</span>' +
+      '<span class="th-role-rate">' + fmt(r.rate) + '/hr</span>' +
+      '</th>'
+    ).join('') +
+    '<th class="th-total"><div class="th-total-inner">Total</div></th>' +
+    '</tr>';
+
+  // Body: one row per phase
+  body.innerHTML = phases.map((p, pi) =>
+    '<tr id="phase_' + pi + '">' +
+    '<td class="td-phase">' +
+      '<button class="del-phase" onclick="deletePhase(' + pi + ')" title="Remove phase">✕</button>' +
+      '<input class="phase-name" value="' + esc(p.name) + '" oninput="phases[' + pi + '].name=this.value">' +
+      '<input class="phase-timing" value="' + esc(p.timing) + '" placeholder="timing / weeks" oninput="phases[' + pi + '].timing=this.value">' +
+      '<button class="phase-comment-toggle" onclick="toggleComment(' + pi + ')" id="ctog_' + pi + '">' +
+        (p.comment ? '▾ note' : '+ note') +
+      '</button>' +
+      '<div class="phase-comment-area' + (p.comment ? ' open' : '') + '" id="carea_' + pi + '">' +
+        '<textarea class="phase-comment" rows="2" oninput="phases[' + pi + '].comment=this.value;updateCommentToggle(' + pi + ')">' + esc(p.comment) + '</textarea>' +
+      '</div>' +
+    '</td>' +
+    ROLES.map((r, ri) =>
+      '<td class="td-hrs">' +
+      '<input class="role-input ' + (p.hrs[ri] ? 'has-val' : 'no-val') + '"' +
+        ' type="number" min="0" step="0.5"' +
+        ' value="' + (p.hrs[ri] || '') + '"' +
+        ' placeholder="—"' +
+        ' id="ri_' + pi + '_' + ri + '"' +
+        ' oninput="phases[" + pi + "].hrs[" + ri + "]=parseFloat(this.value)||0;setRoleInputClass(this);updatePhaseTotal(" + pi + ");updateSummary()">' +
+      '</td>'
+    ).join('') +
+    '<td class="td-total">' +
+      '<span class="td-total-hrs" id="pth_' + pi + '">' + phaseHrs(p).toFixed(1) + ' hrs</span>' +
+      '<span class="td-total-cost" id="ptc_' + pi + '">' + fmt(phaseTotal(p)) + '</span>' +
+    '</td>' +
+    '</tr>'
+  ).join('');
+
+  // Footer: column totals
+  renderFootTotals();
+}
+
+function renderFootTotals() {
+  const foot = document.getElementById('estFoot');
+  if (!foot) return;
+  const roleTotals = ROLES.map((r, ri) => ({
+    hrs: phases.reduce((s, p) => s + (p.hrs[ri] || 0), 0),
+    rate: r.rate
+  }));
+  foot.innerHTML = '<tr>' +
+    '<td class="tf-label">Totals</td>' +
+    roleTotals.map(rt =>
+      '<td style="text-align:center;padding:.4rem .25rem;font-size:11px;font-weight:' + (rt.hrs ? '600' : '400') + ';color:' + (rt.hrs ? 'var(--black)' : 'var(--t3)') + ';">' +
+      (rt.hrs ? rt.hrs + 'h' : '—') + '</td>'
+    ).join('') +
+    '<td class="tf-total">' +
+      '<span class="tf-total-hrs">' + totalHrs().toFixed(1) + ' hrs</span>' +
+      '<span class="tf-total-cost">' + fmt(totalLabor()) + '</span>' +
+    '</td>' +
+    '</tr>';
+}
+
+function toggleComment(pi) {
+  const area = document.getElementById('carea_' + pi);
+  if (area) area.classList.toggle('open');
+  updateCommentToggle(pi);
+}
+
+function updateCommentToggle(pi) {
+  const tog = document.getElementById('ctog_' + pi);
+  const area = document.getElementById('carea_' + pi);
+  if (!tog) return;
+  const hasContent = phases[pi] && phases[pi].comment;
+  const isOpen = area && area.classList.contains('open');
+  tog.textContent = isOpen ? '▴ note' : (hasContent ? '▾ note' : '+ note');
+}
+
 
 function updatePhaseTotal(pi) {
   const p = phases[pi];
-  document.getElementById('pth_'+pi).textContent = phaseHrs(p).toFixed(1) + ' hrs';
-  document.getElementById('ptc_'+pi).textContent = fmt(phaseTotal(p));
-  ROLES.forEach((r, ri) => {
-    const el = document.getElementById(`rc_${pi}_${ri}`);
-    if (el) el.textContent = p.hrs[ri] ? fmt(p.hrs[ri] * r.rate) : '—';
-  });
+  const hEl = document.getElementById('pth_' + pi);
+  const cEl = document.getElementById('ptc_' + pi);
+  if (hEl) hEl.textContent = phaseHrs(p).toFixed(1) + ' hrs';
+  if (cEl) cEl.textContent = fmt(phaseTotal(p));
+  renderFootTotals();
 }
+
 
 function addPhase() {
   phases.push({ name:'New Phase', timing:'', comment:'', hrs:new Array(12).fill(0) });
@@ -831,6 +1412,46 @@ function deletePhase(pi) {
 }
 
 // ─── HARD COSTS ───────────────────────────────────────────────────────────────
+
+// ─── EXPENSE SUGGESTIONS ─────────────────────────────────────────────────────
+function renderExpenseSuggestions(svc) {
+  const panel = document.getElementById('expenseSuggestions');
+  const listEl = document.getElementById('expSugList');
+  const statEl = document.getElementById('expSugStat');
+  const data = EXPENSE_TYPES[svc];
+  if (!data || !data.items || data.items.length === 0) { panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  statEl.textContent = data.pct + '% of similar projects include external expenses';
+  listEl.innerHTML = data.items.map((item, i) =>
+    '<div class="exp-sug-item">' +
+      '<div class="exp-sug-info">' +
+        '<div class="exp-sug-name">' + item.name + '</div>' +
+        '<div class="exp-sug-typical">' + item.typical + '</div>' +
+        '<div class="exp-sug-note">' + item.note + '</div>' +
+      '</div>' +
+      '<button class="exp-sug-add" onclick="addExpenseSuggestion(' + i + ',\'' + svc + '\')">+ Add</button>' +
+    '</div>'
+  ).join('');
+}
+
+function addExpenseSuggestion(idx, svc) {
+  const data = EXPENSE_TYPES[svc];
+  if (!data) return;
+  const item = data.items[idx];
+  if (!item) return;
+  const match = item.typical.match(/\$(\d[\d,]*)/);
+  const defaultCost = match ? parseInt(match[1].replace(/,/g,'')) : 0;
+  hardCosts.push({ desc: item.name, qty: 1, rate: defaultCost });
+  renderHardCosts();
+  updateSummary();
+  const btns = document.querySelectorAll('.exp-sug-add');
+  if (btns[idx]) {
+    btns[idx].textContent = '✓ Added';
+    btns[idx].style.cssText = 'background:#2a9d5c;color:#fff;border-color:#2a9d5c';
+    setTimeout(() => { if(btns[idx]){btns[idx].textContent='+ Add';btns[idx].style.cssText='';} }, 1800);
+  }
+}
+
 function renderHardCosts() {
   const wrap = document.getElementById('hardCostRows');
   if (hardCosts.length === 0) {
@@ -967,21 +1588,6 @@ function updateSummary() {
   document.getElementById('tp-costs').textContent = fmt(costs);
   document.getElementById('tp-total').textContent = fmt(total);
 
-  // Role summary
-  const roleSums = ROLES.map((r, ri) => ({
-    name: r.name, dept: r.dept,
-    hrs: phases.reduce((s, p) => s + (p.hrs[ri]||0), 0),
-    cost: phases.reduce((s, p) => s + (p.hrs[ri]||0) * r.rate, 0)
-  })).filter(r => r.hrs > 0);
-
-  document.getElementById('roleSummary').innerHTML = roleSums.length === 0
-    ? '<div style="padding:10px 1.25rem;font-size:12px;color:var(--t3)">No hours allocated yet.</div>'
-    : roleSums.map(r => `
-      <div class="role-sum-row">
-        <span class="rsn">${r.name}</span>
-        <span class="rsh">${r.hrs.toFixed(1)} hrs</span>
-        <span class="rsc">${fmt(r.cost)}</span>
-      </div>`).join('');
 
   // Gauge
   updateGauge(total);
@@ -1191,6 +1797,158 @@ Generated ${new Date().toLocaleDateString('en-CA')} · Crew Marketing Partners`;
 function updateSaveBtn() {
   const btn = document.getElementById('saveBtn');
   if (btn) btn.disabled = !currentSvc;
+}
+
+// ─── RATE MANAGEMENT PANEL ────────────────────────────────────────────────────
+function toggleRatesPanel() {
+  const panel = document.getElementById('ratesPanel');
+  const btn = document.getElementById('ratesToggleBtn');
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('active', isOpen);
+  if (isOpen && !document.getElementById('ratesRoleGrid').children.length) {
+    renderRatesPanel();
+  }
+}
+
+function renderRatesPanel() {
+  const grid = document.getElementById('ratesRoleGrid');
+  grid.innerHTML = ROLES.map(r => {
+    const ins = RATE_INSIGHTS[r.id];
+    const current = LIVE_RATES[r.id];
+    const def = DEFAULT_RATES[r.id];
+    const isModified = current !== def;
+    const avgBilled = ins.avgBilledWMJ;
+    const gp47 = ins.gp47rate;
+
+    // Signal classification vs. a reference point
+    function rateColor(val, ref) {
+      if (!val || !ref) return 'sig-neutral';
+      const diff = ((val - ref) / ref) * 100;
+      if (diff >= 5) return 'sig-green';
+      if (diff < -10) return 'sig-red';
+      if (diff < 0) return 'sig-amber';
+      return 'sig-green';
+    }
+
+    // Avg billed signal — primary reference
+    const avgBilledSignal = avgBilled
+      ? `<div class="rri-signal">
+          <span class="rri-signal-label">Avg billed rate (2025–26)</span>
+          <span class="rri-signal-val ${rateColor(current, avgBilled)}">${fmtRate(avgBilled)}/hr</span>
+        </div>`
+      : '';
+
+    // GP / market range signal
+    const gp47Signal = ins.gp47unrealistic
+      ? `<div class="rri-signal">
+          <span class="rri-signal-label">Market rate range</span>
+          <span class="rri-signal-val sig-neutral">${fmtRate(ins.marketRange[0])}–${fmtRate(ins.marketRange[1])}/hr</span>
+        </div>`
+      : gp47
+        ? `<div class="rri-signal">
+            <span class="rri-signal-label">Required for 47% GP target</span>
+            <span class="rri-signal-val ${gp47 > current * 1.1 ? 'sig-red' : gp47 > current ? 'sig-amber' : 'sig-green'}">${fmtRate(gp47)}/hr</span>
+          </div>`
+        : '';
+
+    // Sparkbar: anchored to avgBilled + (gp47 or marketRange midpoint), current dot
+    const ref2 = ins.gp47unrealistic
+      ? (ins.marketRange[0] + ins.marketRange[1]) / 2
+      : gp47;
+    const ref1 = avgBilled || ref2;
+    const barAnchors = [ref1, ref2, current].filter(Boolean);
+    const barMin = Math.min(...barAnchors) * 0.88;
+    const barMax = Math.max(...barAnchors) * 1.15;
+    const barRange = barMax - barMin;
+    function pct(v) { return Math.max(0, Math.min(100, ((v - barMin) / barRange) * 100)).toFixed(1); }
+    const lo = ref1 && ref2 ? Math.min(ref1, ref2) : (ref1 || ref2);
+    const hi = ref1 && ref2 ? Math.max(ref1, ref2) : (ref1 || ref2);
+    const rangeLeft = lo ? pct(lo) : '0';
+    const rangeWidth = (lo && hi) ? (parseFloat(pct(hi)) - parseFloat(pct(lo))).toFixed(1) : '0';
+    const currentPct = pct(current);
+    const avgBilledPct = avgBilled ? pct(avgBilled) : null;
+
+    return `<div class="rates-role-item" id="rri_${r.id}">
+      <div class="rri-top">
+        <div>
+          <div class="rri-name">${r.name}</div>
+          <div class="rri-dept">${r.dept}</div>
+        </div>
+      </div>
+      <div class="rri-input-row">
+        <span class="rri-prefix">$</span>
+        <input class="rri-input${isModified ? ' modified' : ''}" id="rate_input_${r.id}"
+          type="number" min="50" max="800" step="5" value="${current}"
+          oninput="updateLiveRate('${r.id}', this)"
+          onblur="snapRate('${r.id}', this)">
+        <span class="rri-suffix">/ hr${isModified ? ' <span style="color:var(--accent);font-weight:600">· modified</span>' : ''}</span>
+      </div>
+      <div class="rri-signals">
+        ${avgBilledSignal}
+        ${gp47Signal}
+      </div>
+      <div class="rri-rec-bar">
+        <div class="rri-rec-range" style="left:${rangeLeft}%;width:${rangeWidth}%"></div>
+        ${avgBilledPct !== null ? `<div class="rri-rec-dot dot-target" title="Avg billed 2025–26: ${fmtRate(avgBilled)}/hr" style="left:${avgBilledPct}%"></div>` : ''}
+        <div class="rri-rec-dot dot-current" title="Your current rate: ${fmtRate(current)}/hr" style="left:${currentPct}%"></div>
+      </div>
+      <div class="rri-tip">${ins.tip}</div>
+    </div>`;
+  }).join('');
+}
+
+function fmtRate(v) {
+  return '$' + Math.round(v);
+}
+
+function updateLiveRate(id, input) {
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val < 10) return;
+  LIVE_RATES[id] = val;
+  input.classList.toggle('modified', val !== DEFAULT_RATES[id]);
+  // Update suffix text
+  const suffix = input.closest('.rri-input-row').querySelector('.rri-suffix');
+  suffix.innerHTML = val !== DEFAULT_RATES[id]
+    ? '/ hr <span style="color:var(--accent);font-weight:600">· modified</span>'
+    : '/ hr';
+  // Update bar dots
+  const item = document.getElementById('rri_' + id);
+  if (item) {
+    const ins = RATE_INSIGHTS[id];
+    const ref2 = ins.gp47unrealistic
+      ? (ins.marketRange[0] + ins.marketRange[1]) / 2
+      : ins.gp47rate;
+    const ref1 = ins.avgBilledWMJ || ref2;
+    const anchors = [ref1, ref2, val].filter(Boolean);
+    const barMin = Math.min(...anchors) * 0.88;
+    const barMax = Math.max(...anchors) * 1.15;
+    const barRange = barMax - barMin;
+    function pct(v) { return Math.max(0, Math.min(100, ((v - barMin) / barRange) * 100)).toFixed(1) + '%'; }
+    const dot = item.querySelector('.dot-current');
+    if (dot) { dot.style.left = pct(val); dot.title = 'Your current rate: ' + fmtRate(val) + '/hr'; }
+  }
+  // Update modified badge
+  const anyModified = ROLES.some(r => LIVE_RATES[r.id] !== DEFAULT_RATES[r.id]);
+  const badge = document.getElementById('ratesModifiedBadge');
+  if (badge) badge.style.display = anyModified ? 'inline' : 'none';
+  // Re-render all phases and summary
+  if (currentSvc) { renderPhases(); updateSummary(); }
+}
+
+function snapRate(id, input) {
+  let val = Math.round(parseFloat(input.value) / 5) * 5;
+  if (isNaN(val) || val < 50) val = DEFAULT_RATES[id];
+  if (val > 800) val = 800;
+  input.value = val;
+  updateLiveRate(id, input);
+}
+
+function resetAllRates() {
+  ROLES.forEach(r => { LIVE_RATES[r.id] = DEFAULT_RATES[r.id]; });
+  const badge = document.getElementById('ratesModifiedBadge');
+  if (badge) badge.style.display = 'none';
+  renderRatesPanel();
+  if (currentSvc) { renderPhases(); updateSummary(); }
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────

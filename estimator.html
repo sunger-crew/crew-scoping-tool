@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project Estimator — Crew</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Project Estimator — Crew v2.6</title>
 <style>
 :root {
   --black:#111110;--white:#fff;--off:#F5F3EF;--mid:#E8E5E0;
@@ -15,7 +20,7 @@
   --blue:#1a4fad;--blue-bg:#e8f0fe;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:var(--black);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;background:var(--off);color:var(--black);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 /* NAV */
 .sitenav{background:var(--black);height:60px;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:14px}
@@ -86,7 +91,7 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--off);color:v
 .roles-grid{display:grid;gap:5px}
 .role-row{display:flex;align-items:center;gap:6px;font-size:12px}
 .role-name{flex:1;color:var(--t2);font-size:11px}
-.role-input{width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:2px;font-family:inherit;font-size:12px;text-align:right;color:var(--black);background:#fff;outline:none;transition:border-color .12s}
+.role-input{width:46px;padding:3px 2px;border:1px solid transparent;border-radius:2px;font-family:inherit;font-size:12px;text-align:center;color:var(--black);background:transparent;outline:none;transition:border-color .12s}
 .role-input:focus{border-color:var(--black)}
 .role-cost{width:72px;font-size:11px;color:var(--t3);text-align:right}
 .phase-total-row{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);font-size:12px}
@@ -222,55 +227,92 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .legend-dot{width:8px;height:8px;border-radius:50%}
 
 /* ── SPREADSHEET GRID ──────────────────────────────────────────────────────── */
+:root {
+  --c-account-bg:#ddeeff; --c-account-t:#1a4491; --c-account-d:#aaccf0;
+  --c-social-bg:#fff0dd;  --c-social-t:#8a4a08;  --c-social-d:#f5cfa0;
+  --c-creative-bg:#edfaed;--c-creative-t:#1a5c1a;--c-creative-d:#a8d8a8;
+  --c-studios-bg:#f0eaff; --c-studios-t:#4820a0; --c-studios-d:#c8b0f0;
+  --c-web-bg:#e0f8fa;     --c-web-t:#0a6070;     --c-web-d:#90d0dc;
+}
 .phases-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.phases-header{background:var(--black);padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between}
-.phases-header h2{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#fff;margin:0}
-.add-phase-btn{padding:4px 11px;border-radius:2px;border:1px solid rgba(255,255,255,.2);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;font-family:inherit;transition:all .12s}
-.add-phase-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.grid-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.est-table{width:max-content;min-width:100%;border-collapse:collapse;table-layout:fixed}
-.est-table thead tr{background:var(--off)}
-.est-table thead th{padding:0;border-bottom:2px solid var(--border);border-right:1px solid var(--mid);white-space:nowrap;vertical-align:bottom}
-.est-table thead th:last-child{border-right:none}
-.th-phase{width:200px;min-width:160px;padding:.5rem .75rem;text-align:left}
-.th-phase-inner{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
-.th-role{width:76px;min-width:64px;padding:.35rem .4rem .5rem;text-align:center}
-.th-role-name{font-size:11px;font-weight:600;color:var(--black);display:block;line-height:1.2}
-.th-role-rate{font-size:9.5px;color:var(--t3);display:block;margin-top:1px}
-.th-total{width:92px;padding:.35rem .6rem .5rem;text-align:right;background:var(--off)}
-.th-total-inner{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3)}
-.est-table tbody tr{border-bottom:1px solid var(--mid)}
-.est-table tbody tr:last-child{border-bottom:none}
-.est-table tbody tr:hover td{background:#fafaf8}
-.td-phase{padding:.45rem .75rem;vertical-align:top;border-right:1px solid var(--mid);min-width:160px}
-.phase-name{font-size:12.5px;font-weight:600;color:var(--black);background:none;border:none;font-family:inherit;outline:none;padding:1px 0;width:100%;display:block}
-.phase-name:focus{border-bottom:1px dashed var(--bs)}
-.phase-timing{font-size:10px;color:var(--t3);background:none;border:none;font-family:inherit;outline:none;width:100%;display:block;margin-top:2px;padding:0}
-.phase-timing:focus{border-bottom:1px dashed var(--bs)}
-.phase-comment-toggle{display:inline-flex;align-items:center;gap:3px;margin-top:4px;font-size:10px;color:var(--t3);cursor:pointer;background:none;border:none;font-family:inherit;padding:0;line-height:1.3;transition:color .1s}
-.phase-comment-toggle:hover{color:var(--t2)}
+.phases-header{background:var(--black);padding:.625rem 1rem;display:flex;align-items:center;justify-content:space-between}
+.phases-header h2{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin:0}
+.add-phase-btn{padding:3px 10px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;font-family:inherit}
+.add-phase-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.grid-scroll{overflow-x:auto}
+.est-table{border-collapse:collapse;border-spacing:0}
+
+/* Phase col */
+.th-phase{width:260px;padding:.5rem .875rem;text-align:left;background:var(--off);border-right:2px solid var(--border);border-bottom:2px solid var(--border);vertical-align:bottom}
+.th-phase-inner{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+.td-phase{width:260px;padding:.45rem .875rem;vertical-align:top;border-right:2px solid var(--border);border-bottom:1px solid var(--mid);overflow:hidden}
+
+/* Role cols */
+.th-role{width:60px;padding:0 0 .35rem;text-align:center;border-right:1px solid rgba(0,0,0,.08);border-bottom:2px solid var(--border);vertical-align:bottom;overflow:hidden}
+.th-role:last-of-type{border-right:none}
+.th-dept-bar{display:block;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 2px;text-align:center;margin-bottom:5px;white-space:nowrap;overflow:hidden}
+.th-dept-bar-spacer{display:block;height:18px;margin-bottom:5px}
+.th-role-name{display:block;font-size:11px;font-weight:700;color:var(--black);line-height:1.3}
+.th-role-rate{display:block;font-size:9px;color:var(--t3);margin-top:1px}
+.td-hrs{width:60px;padding:.35rem .1rem;text-align:center;vertical-align:middle;border-right:1px solid rgba(0,0,0,.06);border-bottom:1px solid var(--mid)}
+
+/* Dept colors */
+.th-role.dept-account {background:var(--c-account-bg)} .th-role.dept-social{background:var(--c-social-bg)} .th-role.dept-creative{background:var(--c-creative-bg)} .th-role.dept-studios{background:var(--c-studios-bg)} .th-role.dept-web{background:var(--c-web-bg)}
+.dept-bar-account{background:var(--c-account-d);color:var(--c-account-t)} .dept-bar-social{background:var(--c-social-d);color:var(--c-social-t)} .dept-bar-creative{background:var(--c-creative-d);color:var(--c-creative-t)} .dept-bar-studios{background:var(--c-studios-d);color:var(--c-studios-t)} .dept-bar-web{background:var(--c-web-d);color:var(--c-web-t)}
+.td-hrs.dept-account{background:rgba(221,238,255,.3)} .td-hrs.dept-social{background:rgba(255,240,221,.3)} .td-hrs.dept-creative{background:rgba(237,250,237,.3)} .td-hrs.dept-studios{background:rgba(240,234,255,.3)} .td-hrs.dept-web{background:rgba(224,248,250,.3)}
+.est-table tbody tr:nth-child(even) .td-hrs.dept-account{background:rgba(221,238,255,.55)} .est-table tbody tr:nth-child(even) .td-hrs.dept-social{background:rgba(255,240,221,.55)} .est-table tbody tr:nth-child(even) .td-hrs.dept-creative{background:rgba(237,250,237,.55)} .est-table tbody tr:nth-child(even) .td-hrs.dept-studios{background:rgba(240,234,255,.55)} .est-table tbody tr:nth-child(even) .td-hrs.dept-web{background:rgba(224,248,250,.55)}
+
+/* Total col */
+.th-total{width:88px;padding:.5rem .625rem .35rem;text-align:right;background:var(--off);border-left:2px solid var(--border);border-bottom:2px solid var(--border);vertical-align:bottom}
+.th-total-inner{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
+.td-total{width:88px;padding:.4rem .625rem;text-align:right;vertical-align:middle;border-left:2px solid var(--border);border-bottom:1px solid var(--mid);background:#f7f6f3;white-space:nowrap}
+.td-total-hrs{font-size:9.5px;color:var(--t3);display:block;margin-bottom:1px;font-weight:500}
+.td-total-cost{font-size:12.5px;font-weight:700;color:var(--black);font-variant-numeric:tabular-nums;display:block}
+
+/* Hour input */
+.role-input{width:46px;padding:4px 2px;border:1px solid transparent;border-radius:3px;font-size:12px;font-weight:500;font-family:inherit;text-align:center;background:transparent;color:var(--black);display:block;margin:0 auto;-moz-appearance:textfield}
+.role-input::-webkit-outer-spin-button,.role-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.role-input:hover{border-color:rgba(0,0,0,.2);background:#fff}
+.role-input:focus{outline:none;border-color:var(--accent);background:#fff}
+.role-input.has-val{font-weight:700}
+.role-input.no-val{color:transparent}
+.role-input.no-val:hover,.role-input.no-val:focus{color:var(--t3)}
+
+/* Phase cell */
+.phase-row-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}
+.phase-row-meta{flex:1;min-width:0}
+.phase-name{font-size:12px;font-weight:600;color:var(--black);background:none;border:none;font-family:inherit;outline:none;padding:0;width:100%;display:block;line-height:1.35}
+.phase-name:focus{border-bottom:1px dashed var(--accent)}
+.phase-timing{font-size:10px;color:var(--t3);font-weight:500;background:none;border:none;font-family:inherit;outline:none;width:100%;display:block;margin-top:2px;padding:0}
+.phase-timing:focus{border-bottom:1px dashed var(--accent)}
+.phase-comment-toggle{display:inline-flex;align-items:center;gap:2px;margin-top:4px;font-size:9.5px;font-weight:500;color:var(--t3);cursor:pointer;background:none;border:none;font-family:inherit;padding:0;transition:color .1s}
+.phase-comment-toggle:hover{color:var(--accent)}
 .phase-comment-area{margin-top:4px;display:none}
 .phase-comment-area.open{display:block}
-.phase-comment{font-size:10.5px;color:var(--t2);line-height:1.5;padding:3px 5px;background:var(--off);border:none;border-radius:2px;width:100%;resize:vertical;font-family:inherit;min-height:28px}
-.phase-comment:focus{outline:1px solid var(--bs)}
-.del-phase{float:right;background:none;border:none;cursor:pointer;color:var(--t3);font-size:12px;padding:1px 3px;line-height:1;margin-left:4px;transition:color .1s}
-.del-phase:hover{color:var(--accent)}
-.td-hrs{padding:.35rem .25rem;text-align:center;vertical-align:middle;border-right:1px solid var(--mid)}
-.role-input{width:54px;padding:4px 4px;border:1px solid transparent;border-radius:2px;font-size:12px;font-family:inherit;text-align:center;background:transparent;color:var(--black);transition:all .1s;display:block;margin:0 auto}
-.role-input:hover{border-color:var(--mid);background:var(--off)}
-.role-input:focus{outline:none;border-color:var(--bs);background:#fff}
-.role-input.has-val{font-weight:600}
-.role-input.no-val{color:var(--t3)}
-.td-total{padding:.4rem .6rem;text-align:right;vertical-align:middle;background:#fafaf8;border-left:1px solid var(--border)}
-.td-total-hrs{font-size:10px;color:var(--t3);display:block;margin-bottom:1px}
-.td-total-cost{font-size:12.5px;font-weight:600;color:var(--black);font-variant-numeric:tabular-nums;display:block}
-.est-table tfoot tr{background:var(--off);border-top:2px solid var(--border)}
-.est-table tfoot td{padding:.4rem .25rem;text-align:center;font-size:11px;border-right:1px solid var(--mid)}
-.est-table tfoot td:last-child{border-right:none}
-.tf-label{padding:.4rem .75rem;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);text-align:left;border-right:1px solid var(--mid)}
-.tf-total{padding:.4rem .6rem;text-align:right;background:#f0efe9;border-left:1px solid var(--border)}
-.tf-total-hrs{font-size:10px;color:var(--t2);display:block}
-.tf-total-cost{font-size:13px;font-weight:700;color:var(--black);display:block}
+.phase-comment{font-size:10.5px;color:var(--t2);line-height:1.5;padding:4px 6px;background:var(--off);border:1px solid var(--mid);border-radius:3px;width:100%;resize:none;font-family:inherit;min-height:28px}
+.phase-comment:focus{outline:none;border-color:var(--bs)}
+.del-phase{flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--t3);font-size:11px;padding:1px 3px;line-height:1;transition:color .1s;opacity:.4}
+.del-phase:hover{color:var(--accent);opacity:1}
+
+/* Footer */
+.tfoot-row>td{border-top:2px solid var(--border);background:var(--off);padding:.35rem .1rem;text-align:center;font-size:11px;font-weight:600;color:var(--black);font-variant-numeric:tabular-nums;border-right:1px solid rgba(0,0,0,.07)}
+.tf-label{text-align:left !important;padding:.35rem .75rem !important;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);border-right:2px solid var(--border) !important}
+.tf-zero{color:var(--t3);font-weight:400}
+.tf-grand{border-left:2px solid var(--border) !important;background:#eceae4 !important;text-align:right !important;padding:.35rem .625rem !important;white-space:nowrap}
+.tf-grand-hrs{font-size:9.5px;color:var(--t2);display:block;font-weight:500}
+.tf-grand-cost{font-size:13px;font-weight:800;color:var(--black);display:block}
+
+/* Legend */
+.role-legend{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden;display:block}
+.legend-head{background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.legend-dept-block{border-top:1px solid var(--mid)}
+.legend-dept-block:first-child{border-top:none}
+.legend-dept-label{padding:.28rem .875rem;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.legend-dept-label.dept-account{background:var(--c-account-bg);color:var(--c-account-t)} .legend-dept-label.dept-social{background:var(--c-social-bg);color:var(--c-social-t)} .legend-dept-label.dept-creative{background:var(--c-creative-bg);color:var(--c-creative-t)} .legend-dept-label.dept-studios{background:var(--c-studios-bg);color:var(--c-studios-t)} .legend-dept-label.dept-web{background:var(--c-web-bg);color:var(--c-web-t)}
+.legend-role{display:flex;align-items:baseline;gap:.5rem;padding:.22rem .875rem}
+.legend-short{font-size:11px;font-weight:700;color:var(--black);min-width:52px;flex-shrink:0}
+.legend-full{font-size:10px;color:var(--t2);flex:1}
+.legend-rate{font-size:10px;color:var(--t3);white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* EXPENSE SUGGESTIONS */
 .expense-suggestions{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;display:none}
@@ -286,6 +328,24 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .exp-sug-note{font-size:11px;color:var(--t3);margin-top:2px;line-height:1.3}
 .exp-sug-add{flex-shrink:0;background:var(--off);border:1px solid var(--mid);border-radius:4px;font-size:11px;font-weight:600;color:var(--black);padding:3px 10px;cursor:pointer;white-space:nowrap;margin-top:2px;transition:background .15s}
 .exp-sug-add:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Inline dept stripe inside role header */
+.th-dept-stripe {
+  display:block;
+  font-size:8.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+  padding:3px 4px 2px;
+  margin:-0.3rem -0.3rem .3rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  border-radius:2px 2px 0 0;
+}
+.th-dept-stripe-cont {
+  visibility:hidden;
+}
+.th-role.dept-account  .th-dept-stripe { background:var(--dept-account-b);  color:var(--dept-account-text); }
+.th-role.dept-social   .th-dept-stripe { background:var(--dept-social-b);   color:var(--dept-social-text); }
+.th-role.dept-creative .th-dept-stripe { background:var(--dept-creative-b); color:var(--dept-creative-text); }
+.th-role.dept-studios  .th-dept-stripe { background:var(--dept-studios-b);  color:var(--dept-studios-text); }
+.th-role.dept-web      .th-dept-stripe { background:var(--dept-web-b);      color:var(--dept-web-text); }
 </style>
 </head>
 <body><script>
@@ -312,7 +372,7 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       <a href="estimator.html" class="nav-link active">Estimator</a>
     </div>
   </div>
-  <div class="nav-right">Internal use only</div>
+  <div class="nav-right">Internal use only &nbsp;·&nbsp; <span style="opacity:.4;font-size:10px">v2.6</span></div>
 </nav>
 
 <div class="shell">
@@ -485,10 +545,10 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 
     <!-- SIDEBAR -->
     <div class="sidebar">
-      <!-- ROLE SUMMARY -->
-      <div class="role-summary">
-        <div class="panel-head">Hours by role</div>
-        <div id="roleSummary"></div>
+      <!-- ROLE LEGEND -->
+      <div class="role-legend">
+        <div class="legend-head">Role legend</div>
+        <div id="roleLegend"></div>
       </div>
 
 
@@ -561,18 +621,18 @@ const DEFAULT_RATES = {
 const LIVE_RATES = Object.assign({}, DEFAULT_RATES);
 
 const ROLES = [
-  { id:'pm',     name:'Project Manager',              dept:'Account' },
-  { id:'strat',  name:'Strategist',                   dept:'Account' },
-  { id:'socmgr', name:'Social Media Manager',         dept:'Social'  },
-  { id:'socsp',  name:'Social Media Specialist',      dept:'Social'  },
-  { id:'content',name:'Content Creator',              dept:'Social'  },
-  { id:'ad',     name:'AD / Design',                  dept:'Creative'},
-  { id:'copy',   name:'Copywriter',                   dept:'Creative'},
-  { id:'ecd',    name:'Executive Creative Director',  dept:'Creative'},
-  { id:'cco',    name:'Creative CCO',                 dept:'Creative'},
-  { id:'prod',   name:'Producer',                     dept:'Studios' },
-  { id:'webpm',  name:'Web Project Manager',          dept:'Web'     },
-  { id:'webst',  name:'Web Strategy / Dev',           dept:'Web'     },
+  { id:'pm',     name:'PM',        fullName:'Project Manager',             dept:'Account'  },
+  { id:'strat',  name:'Strat',     fullName:'Strategist',                  dept:'Account'  },
+  { id:'socmgr', name:'Soc Mgr',   fullName:'Social Media Manager',        dept:'Social'   },
+  { id:'socsp',  name:'Soc Spec',  fullName:'Social Specialist',           dept:'Social'   },
+  { id:'content',name:'Content',   fullName:'Content Creator',             dept:'Social'   },
+  { id:'ad',     name:'Design',    fullName:'AD / Design',                 dept:'Creative' },
+  { id:'copy',   name:'Copy',      fullName:'Copywriter',                  dept:'Creative' },
+  { id:'ecd',    name:'ECD',       fullName:'Executive Creative Director', dept:'Creative' },
+  { id:'cco',    name:'CCO',       fullName:'Chief Creative Officer',      dept:'Creative' },
+  { id:'prod',   name:'Producer',  fullName:'Producer',                    dept:'Studios'  },
+  { id:'webpm',  name:'Web PM',    fullName:'Web Project Manager',         dept:'Web'      },
+  { id:'webst',  name:'Web Dev',   fullName:'Web Strategy / Dev',          dept:'Web'      },
 ].map(r => Object.defineProperty(r, 'rate', {
   get(){ return LIVE_RATES[r.id]; },
   enumerable: true
@@ -1276,6 +1336,7 @@ function showEstimator() {
   document.getElementById('summaryBar').style.display = 'flex';
   document.getElementById('gaugeBlock').style.display = 'block';
   document.getElementById('estimatorLayout').style.display = 'grid';
+  renderRoleLegend();
   const hist = HIST[currentSvc];
   if (hist) {
     document.getElementById('phasesTitle').textContent = hist.label + ' — Phase Breakdown';
@@ -1298,96 +1359,155 @@ function resetEstimator() {
 // ─── RENDER PHASES ────────────────────────────────────────────────────────────
 
 function setRoleInputClass(el) {
-  el.className = 'role-input ' + (el.value ? 'has-val' : 'no-val');
+  el.className = 'role-input ' + (parseFloat(el.value) > 0 ? 'has-val' : 'no-val');
 }
+
+const DEPTS = [
+  { id:'Account',  roles:['pm','strat'] },
+  { id:'Social',   roles:['socmgr','socsp','content'] },
+  { id:'Creative', roles:['ad','copy','ecd','cco'] },
+  { id:'Studios',  roles:['prod'] },
+  { id:'Web',      roles:['webpm','webst'] },
+];
+
+function deptKey(dept) { return dept.toLowerCase(); }
 
 function renderPhases() {
-  const head = document.getElementById('estHead');
-  const body = document.getElementById('phasesBody');
-  const foot = document.getElementById('estFoot');
+  var head = document.getElementById('estHead');
+  var body = document.getElementById('phasesBody');
+  if (!head || !body) return;
 
-  // Header: role columns
-  head.innerHTML = '<tr>' +
-    '<th class="th-phase"><div class="th-phase-inner">Phase</div></th>' +
-    ROLES.map(r =>
-      '<th class="th-role">' +
+  // Build role→dept lookup
+  var roleDept = {};
+  DEPTS.forEach(function(d) { d.roles.forEach(function(r) { roleDept[r] = d.id; }); });
+
+  // Header: one th per role, dept bar only on first of each dept
+  var deptSeen = {};
+  var roleThs = ROLES.map(function(r) {
+    var dept = roleDept[r.id] || 'Account';
+    var dk = deptKey(dept);
+    var bar = !deptSeen[dept]
+      ? '<span class="th-dept-bar dept-bar-' + dk + '">' + dept + '</span>'
+      : '<span class="th-dept-bar-spacer"></span>';
+    deptSeen[dept] = true;
+    return '<th class="th-role dept-' + dk + '">' +
+      bar +
       '<span class="th-role-name">' + r.name + '</span>' +
-      '<span class="th-role-rate">' + fmt(r.rate) + '/hr</span>' +
-      '</th>'
-    ).join('') +
-    '<th class="th-total"><div class="th-total-inner">Total</div></th>' +
+      '<span class="th-role-rate">' + fmt(r.rate) + '</span>' +
+    '</th>';
+  }).join('');
+
+  head.innerHTML =
+    '<tr>' +
+      '<th class="th-phase"><span class="th-phase-inner">Phase &amp; Timeline</span></th>' +
+      roleThs +
+      '<th class="th-total"><span class="th-total-inner">Total</span></th>' +
     '</tr>';
 
-  // Body: one row per phase
-  body.innerHTML = phases.map((p, pi) =>
-    '<tr id="phase_' + pi + '">' +
-    '<td class="td-phase">' +
-      '<button class="del-phase" onclick="deletePhase(' + pi + ')" title="Remove phase">✕</button>' +
-      '<input class="phase-name" value="' + esc(p.name) + '" oninput="phases[' + pi + '].name=this.value">' +
-      '<input class="phase-timing" value="' + esc(p.timing) + '" placeholder="timing / weeks" oninput="phases[' + pi + '].timing=this.value">' +
-      '<button class="phase-comment-toggle" onclick="toggleComment(' + pi + ')" id="ctog_' + pi + '">' +
-        (p.comment ? '▾ note' : '+ note') +
-      '</button>' +
-      '<div class="phase-comment-area' + (p.comment ? ' open' : '') + '" id="carea_' + pi + '">' +
-        '<textarea class="phase-comment" rows="2" oninput="phases[' + pi + '].comment=this.value;updateCommentToggle(' + pi + ')">' + esc(p.comment) + '</textarea>' +
-      '</div>' +
-    '</td>' +
-    ROLES.map((r, ri) =>
-      '<td class="td-hrs">' +
-      '<input class="role-input ' + (p.hrs[ri] ? 'has-val' : 'no-val') + '"' +
-        ' type="number" min="0" step="0.5"' +
-        ' value="' + (p.hrs[ri] || '') + '"' +
-        ' placeholder="—"' +
-        ' id="ri_' + pi + '_' + ri + '"' +
-        ' oninput="phases[" + pi + "].hrs[" + ri + "]=parseFloat(this.value)||0;setRoleInputClass(this);updatePhaseTotal(" + pi + ");updateSummary()">' +
-      '</td>'
-    ).join('') +
-    '<td class="td-total">' +
-      '<span class="td-total-hrs" id="pth_' + pi + '">' + phaseHrs(p).toFixed(1) + ' hrs</span>' +
-      '<span class="td-total-cost" id="ptc_' + pi + '">' + fmt(phaseTotal(p)) + '</span>' +
-    '</td>' +
-    '</tr>'
-  ).join('');
+  // Body rows
+  body.innerHTML = phases.map(function(p, pi) {
+    var hrCells = ROLES.map(function(r, ri) {
+      var dept = roleDept[r.id] || 'Account';
+      var val = p.hrs[ri] || 0;
+      return '<td class="td-hrs dept-' + deptKey(dept) + '">' +
+        '<input class="role-input ' + (val ? 'has-val' : 'no-val') + '"' +
+          ' type="number" min="0" step="0.5"' +
+          ' value="' + (val || '') + '"' +
+          ' placeholder=""' +
+          ' id="ri_' + pi + '_' + ri + '"' +
+          ' oninput="onHrsInput(this,' + pi + ',' + ri + ')">' +
+      '</td>';
+    }).join('');
 
-  // Footer: column totals
+    return '<tr id="phase_' + pi + '">' +
+      '<td class="td-phase">' +
+        '<div class="phase-row-top">' +
+          '<div class="phase-row-meta">' +
+            '<input class="phase-name" value="' + esc(p.name) + '" oninput="phases[' + pi + '].name=this.value">' +
+            '<input class="phase-timing" value="' + esc(p.timing) + '" placeholder="e.g. Wks 1-2" oninput="phases[' + pi + '].timing=this.value">' +
+          '</div>' +
+          '<button class="del-phase" onclick="deletePhase(' + pi + ')" title="Remove">x</button>' +
+        '</div>' +
+        '<button class="phase-comment-toggle" onclick="toggleComment(' + pi + ')" id="ctog_' + pi + '">' +
+          (p.comment ? 'v note' : '+ note') +
+        '</button>' +
+        '<div class="phase-comment-area" id="carea_' + pi + '">' +
+          '<textarea class="phase-comment" rows="2" oninput="phases[' + pi + '].comment=this.value;updateCommentToggle(' + pi + ')">' + esc(p.comment) + '</textarea>' +
+        '</div>' +
+      '</td>' +
+      hrCells +
+      '<td class="td-total">' +
+        '<span class="td-total-hrs" id="pth_' + pi + '">' + phaseHrs(p).toFixed(1) + ' hrs</span>' +
+        '<span class="td-total-cost" id="ptc_' + pi + '">' + fmt(phaseTotal(p)) + '</span>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
   renderFootTotals();
-}
-
-function renderFootTotals() {
-  const foot = document.getElementById('estFoot');
-  if (!foot) return;
-  const roleTotals = ROLES.map((r, ri) => ({
-    hrs: phases.reduce((s, p) => s + (p.hrs[ri] || 0), 0),
-    rate: r.rate
-  }));
-  foot.innerHTML = '<tr>' +
-    '<td class="tf-label">Totals</td>' +
-    roleTotals.map(rt =>
-      '<td style="text-align:center;padding:.4rem .25rem;font-size:11px;font-weight:' + (rt.hrs ? '600' : '400') + ';color:' + (rt.hrs ? 'var(--black)' : 'var(--t3)') + ';">' +
-      (rt.hrs ? rt.hrs + 'h' : '—') + '</td>'
-    ).join('') +
-    '<td class="tf-total">' +
-      '<span class="tf-total-hrs">' + totalHrs().toFixed(1) + ' hrs</span>' +
-      '<span class="tf-total-cost">' + fmt(totalLabor()) + '</span>' +
-    '</td>' +
-    '</tr>';
+  renderRoleLegend();
 }
 
 function toggleComment(pi) {
-  const area = document.getElementById('carea_' + pi);
+  var area = document.getElementById('carea_' + pi);
   if (area) area.classList.toggle('open');
   updateCommentToggle(pi);
 }
 
 function updateCommentToggle(pi) {
-  const tog = document.getElementById('ctog_' + pi);
-  const area = document.getElementById('carea_' + pi);
+  var tog = document.getElementById('ctog_' + pi);
+  var area = document.getElementById('carea_' + pi);
   if (!tog) return;
-  const hasContent = phases[pi] && phases[pi].comment;
-  const isOpen = area && area.classList.contains('open');
-  tog.textContent = isOpen ? '▴ note' : (hasContent ? '▾ note' : '+ note');
+  var isOpen = area && area.classList.contains('open');
+  var hasContent = phases[pi] && phases[pi].comment;
+  tog.textContent = isOpen ? '^ note' : (hasContent ? 'v note' : '+ note');
 }
 
+function renderRoleLegend() {
+  var el = document.getElementById('roleLegend');
+  if (!el) return;
+  var roleDept = {};
+  DEPTS.forEach(function(d) { d.roles.forEach(function(r) { roleDept[r] = d.id; }); });
+  el.innerHTML = DEPTS.map(function(d) {
+    var roles = ROLES.filter(function(r) { return roleDept[r.id] === d.id; });
+    return '<div class="legend-dept-block">' +
+      '<div class="legend-dept-label dept-' + deptKey(d.id) + '">' + d.id + '</div>' +
+      roles.map(function(r) {
+        return '<div class="legend-role">' +
+          '<span class="legend-short">' + r.name + '</span>' +
+          '<span class="legend-full">' + r.fullName + '</span>' +
+          '<span class="legend-rate">' + fmt(r.rate) + '/hr</span>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }).join('');
+}
+
+function renderFootTotals() {
+  var foot = document.getElementById('estFoot');
+  if (!foot) return;
+  var roleTotals = ROLES.map(function(r, ri) {
+    return phases.reduce(function(s, p) { return s + (p.hrs[ri] || 0); }, 0);
+  });
+  var cells = roleTotals.map(function(h) {
+    return '<td class="' + (h ? '' : 'tf-zero') + '">' + (h ? h + 'h' : '\u2014') + '</td>';
+  }).join('');
+  foot.innerHTML = '<tr class="tfoot-row">' +
+    '<td class="tf-label">Totals</td>' +
+    cells +
+    '<td class="tf-grand">' +
+      '<span class="tf-grand-hrs">' + totalHrs().toFixed(1) + ' hrs</span>' +
+      '<span class="tf-grand-cost">' + fmt(totalLabor()) + '</span>' +
+    '</td>' +
+  '</tr>';
+}
+
+
+function onHrsInput(el, pi, ri) {
+  phases[pi].hrs[ri] = parseFloat(el.value) || 0;
+  setRoleInputClass(el);
+  updatePhaseTotal(pi);
+  updateSummary();
+}
 
 function updatePhaseTotal(pi) {
   const p = phases[pi];
@@ -1860,8 +1980,7 @@ function renderRatesPanel() {
     const barMin = Math.min(...barAnchors) * 0.88;
     const barMax = Math.max(...barAnchors) * 1.15;
     const barRange = barMax - barMin;
-    function pct(v) { return Math.max(0, Math.min(100, ((v - barMin) / barRange) * 100)).toFixed(1); }
-    const lo = ref1 && ref2 ? Math.min(ref1, ref2) : (ref1 || ref2);
+        const lo = ref1 && ref2 ? Math.min(ref1, ref2) : (ref1 || ref2);
     const hi = ref1 && ref2 ? Math.max(ref1, ref2) : (ref1 || ref2);
     const rangeLeft = lo ? pct(lo) : '0';
     const rangeWidth = (lo && hi) ? (parseFloat(pct(hi)) - parseFloat(pct(lo))).toFixed(1) : '0';

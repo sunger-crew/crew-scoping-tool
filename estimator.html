@@ -70,7 +70,7 @@ body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;background:var(--off)
 .gauge-needle::after{content:'▼';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--accent)}
 .gauge-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--t3)}
 /* TWO-COL LAYOUT */
-.estimator-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start}
+.estimator-layout{display:block;width:100%}
 @media(max-width:900px){.estimator-layout{grid-template-columns:1fr}}
 /* PHASES TABLE */
 .phases-wrap{background:#fff;border:1px solid var(--border)}
@@ -243,9 +243,9 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .est-table{border-collapse:collapse;border-spacing:0}
 
 /* Phase col */
-.th-phase{width:260px;padding:.5rem .875rem;text-align:left;background:var(--off);border-right:2px solid var(--border);border-bottom:2px solid var(--border);vertical-align:bottom}
+.th-phase{width:320px;padding:.5rem .875rem;text-align:left;background:var(--off);border-right:2px solid var(--border);border-bottom:2px solid var(--border);vertical-align:bottom}
 .th-phase-inner{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3)}
-.td-phase{width:260px;padding:.45rem .875rem;vertical-align:top;border-right:2px solid var(--border);border-bottom:1px solid var(--mid);overflow:hidden}
+.td-phase{width:320px;padding:.45rem .875rem;vertical-align:top;border-right:2px solid var(--border);border-bottom:1px solid var(--mid);overflow:hidden}
 
 /* Role cols */
 .th-role{width:60px;padding:0 0 .35rem;text-align:center;border-right:1px solid rgba(0,0,0,.08);border-bottom:2px solid var(--border);vertical-align:bottom;overflow:hidden}
@@ -303,16 +303,7 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .tf-grand-cost{font-size:13px;font-weight:800;color:var(--black);display:block}
 
 /* Legend */
-.role-legend{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden;display:block}
-.legend-head{background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff}
-.legend-dept-block{border-top:1px solid var(--mid)}
-.legend-dept-block:first-child{border-top:none}
-.legend-dept-label{padding:.28rem .875rem;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
-.legend-dept-label.dept-account{background:var(--c-account-bg);color:var(--c-account-t)} .legend-dept-label.dept-social{background:var(--c-social-bg);color:var(--c-social-t)} .legend-dept-label.dept-creative{background:var(--c-creative-bg);color:var(--c-creative-t)} .legend-dept-label.dept-studios{background:var(--c-studios-bg);color:var(--c-studios-t)} .legend-dept-label.dept-web{background:var(--c-web-bg);color:var(--c-web-t)}
-.legend-role{display:flex;align-items:baseline;gap:.5rem;padding:.22rem .875rem}
-.legend-short{font-size:11px;font-weight:700;color:var(--black);min-width:52px;flex-shrink:0}
-.legend-full{font-size:10px;color:var(--t2);flex:1}
-.legend-rate{font-size:10px;color:var(--t3);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* legend styles moved to popover */
 
 /* EXPENSE SUGGESTIONS */
 .expense-suggestions{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;display:none}
@@ -346,6 +337,61 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .th-role.dept-creative .th-dept-stripe { background:var(--dept-creative-b); color:var(--dept-creative-text); }
 .th-role.dept-studios  .th-dept-stripe { background:var(--dept-studios-b);  color:var(--dept-studios-text); }
 .th-role.dept-web      .th-dept-stripe { background:var(--dept-web-b);      color:var(--dept-web-text); }
+
+/* ── LEGEND POPOVER ──────────────────────────────────────────────────────── */
+.legend-popover-btn {
+  padding:3px 10px; border-radius:3px;
+  border:1px solid rgba(255,255,255,.2); background:transparent;
+  font-size:11px; font-weight:600; color:rgba(255,255,255,.75);
+  cursor:pointer; font-family:inherit; letter-spacing:.04em;
+  transition:all .12s;
+}
+.legend-popover-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+
+.legend-popover {
+  position:fixed; z-index:9999;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--r); box-shadow:0 8px 32px rgba(0,0,0,.18);
+  width:320px; display:none; overflow:hidden;
+  max-height:480px; overflow-y:auto;
+}
+.legend-popover.open { display:block; }
+
+/* ── BELOW GRID ───────────────────────────────────────────────────────────── */
+.below-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr 240px;
+  gap:12px;
+  margin-top:14px;
+  align-items:start;
+}
+.below-expenses .expense-suggestions {
+  border-radius:var(--r);
+  overflow:hidden;
+  border:1px solid var(--border);
+  margin-bottom:0;
+}
+.below-hardcosts .hard-costs {
+  border-radius:var(--r);
+}
+.below-summary .total-panel {
+  background:var(--black);
+  border-radius:var(--r);
+  padding:1rem 1.25rem;
+}
+.below-summary .tp-row {
+  display:flex;
+  justify-content:space-between;
+  padding:.35rem 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+}
+.below-summary .tp-row:last-child { border-bottom:none; }
+.below-summary .tp-label { color:rgba(255,255,255,.55); }
+.below-summary .tp-val { color:#fff; font-weight:600; font-variant-numeric:tabular-nums; }
+.below-summary .tp-row.total { margin-top:.35rem; padding-top:.5rem; }
+.below-summary .tp-row.total .tp-label { color:rgba(255,255,255,.8); font-size:14px; font-weight:600; }
+.below-summary .tp-row.total .tp-val { font-size:20px; font-weight:800; }
 </style>
 </head>
 <body><script>
@@ -525,7 +571,16 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       <div class="phases-wrap" id="phasesWrap">
         <div class="phases-header">
           <h2 id="phasesTitle">Scope Breakdown</h2>
-          <button class="add-phase-btn" onclick="addPhase()">+ Add phase</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="legend-popover-btn" onclick="toggleLegendPopover(event)" title="Role reference">
+              Roles ▾
+            </button>
+            <button class="add-phase-btn" onclick="addPhase()">+ Add phase</button>
+          </div>
+        </div>
+        <!-- LEGEND POPOVER -->
+        <div class="legend-popover" id="legendPopover">
+          <div class="legend-popover-inner" id="legendPopoverInner"></div>
         </div>
         <div class="grid-scroll">
           <table class="est-table">
@@ -543,46 +598,39 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       </div>
     </div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <!-- ROLE LEGEND -->
-      <div class="role-legend">
-        <div class="legend-head">Role legend</div>
-        <div id="roleLegend"></div>
-      </div>
 
+    <!-- BELOW GRID -->
+    <div class="below-grid">
 
-      <!-- EXPENSE SUGGESTIONS -->
-      <div class="expense-suggestions" id="expenseSuggestions">
-        <div class="exp-sug-head">
-          <h3>Suggested external expenses</h3>
-          <span class="exp-sug-stat" id="expSugStat"></span>
-        </div>
-        <div class="exp-sug-list" id="expSugList"></div>
-      </div>
-
-      <!-- HARD COSTS -->
-      <div class="hard-costs">
-        <div class="panel-head">Hard costs / external expenses</div>
-        <div id="hardCostRows"></div>
-        <button class="add-hc-btn" onclick="addHardCost()">+ Add expense</button>
-      </div>
-
-      <!-- TOTAL -->
-      <div class="total-panel" id="totalPanel">
-        <div class="tp-row">
-          <span class="tp-label">Total labor</span>
-          <span class="tp-val" id="tp-labor">$0</span>
-        </div>
-        <div class="tp-row">
-          <span class="tp-label">Hard costs</span>
-          <span class="tp-val" id="tp-costs">$0</span>
-        </div>
-        <div class="tp-row total">
-          <span class="tp-label">Total estimate</span>
-          <span class="tp-val" id="tp-total">$0</span>
+      <!-- Expense suggestions -->
+      <div class="below-expenses">
+        <div class="expense-suggestions" id="expenseSuggestions" style="display:none">
+          <div class="exp-sug-head">
+            <h3>Suggested external expenses</h3>
+            <span class="exp-sug-stat" id="expSugStat"></span>
+          </div>
+          <div class="exp-sug-list" id="expSugList"></div>
         </div>
       </div>
+
+      <!-- Hard costs -->
+      <div class="below-hardcosts">
+        <div class="hard-costs">
+          <div class="panel-head">Hard costs / external expenses</div>
+          <div id="hardCostRows"></div>
+          <button class="add-hc-btn" onclick="addHardCost()">+ Add expense</button>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="below-summary">
+        <div class="total-panel">
+          <div class="tp-row"><span class="tp-label">Total labor</span><span class="tp-val" id="tp-labor">$0</span></div>
+          <div class="tp-row"><span class="tp-label">Hard costs</span><span class="tp-val" id="tp-costs">$0</span></div>
+          <div class="tp-row total"><span class="tp-label">Total estimate</span><span class="tp-val" id="tp-total">$0</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1336,7 +1384,6 @@ function showEstimator() {
   document.getElementById('summaryBar').style.display = 'flex';
   document.getElementById('gaugeBlock').style.display = 'block';
   document.getElementById('estimatorLayout').style.display = 'grid';
-  renderRoleLegend();
   const hist = HIST[currentSvc];
   if (hist) {
     document.getElementById('phasesTitle').textContent = hist.label + ' — Phase Breakdown';
@@ -1444,7 +1491,6 @@ function renderPhases() {
   }).join('');
 
   renderFootTotals();
-  renderRoleLegend();
 }
 
 function toggleComment(pi) {
@@ -1463,23 +1509,49 @@ function updateCommentToggle(pi) {
 }
 
 function renderRoleLegend() {
-  var el = document.getElementById('roleLegend');
+  // Render into popover instead of sidebar
+  var el = document.getElementById('legendPopoverInner');
   if (!el) return;
   var roleDept = {};
   DEPTS.forEach(function(d) { d.roles.forEach(function(r) { roleDept[r] = d.id; }); });
-  el.innerHTML = DEPTS.map(function(d) {
-    var roles = ROLES.filter(function(r) { return roleDept[r.id] === d.id; });
-    return '<div class="legend-dept-block">' +
-      '<div class="legend-dept-label dept-' + deptKey(d.id) + '">' + d.id + '</div>' +
-      roles.map(function(r) {
-        return '<div class="legend-role">' +
-          '<span class="legend-short">' + r.name + '</span>' +
-          '<span class="legend-full">' + r.fullName + '</span>' +
-          '<span class="legend-rate">' + fmt(r.rate) + '/hr</span>' +
-        '</div>';
-      }).join('') +
-    '</div>';
-  }).join('');
+  el.innerHTML = '<div style="background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff">Role reference</div>' +
+    DEPTS.map(function(d) {
+      var roles = ROLES.filter(function(r) { return roleDept[r.id] === d.id; });
+      return '<div class="legend-dept-block">' +
+        '<div class="legend-dept-label dept-' + deptKey(d.id) + '">' + d.id + '</div>' +
+        roles.map(function(r) {
+          return '<div class="legend-role">' +
+            '<span class="legend-short">' + r.name + '</span>' +
+            '<span class="legend-full">' + r.fullName + '</span>' +
+            '<span class="legend-rate">' + fmt(r.rate) + '/hr</span>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }).join('');
+}
+
+function toggleLegendPopover(e) {
+  e.stopPropagation();
+  var pop = document.getElementById('legendPopover');
+  if (!pop) return;
+  var isOpen = pop.classList.toggle('open');
+  if (isOpen) {
+    renderRoleLegend();
+    // Position below the button
+    var btn = e.currentTarget;
+    var rect = btn.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 6) + 'px';
+    pop.style.right = (window.innerWidth - rect.right) + 'px';
+    // Close on click outside
+    setTimeout(function() {
+      document.addEventListener('click', function closePop(ev) {
+        if (!pop.contains(ev.target)) {
+          pop.classList.remove('open');
+          document.removeEventListener('click', closePop);
+        }
+      });
+    }, 0);
+  }
 }
 
 function renderFootTotals() {

@@ -234,7 +234,7 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
   --c-studios-bg:#f0eaff; --c-studios-t:#4820a0; --c-studios-d:#c8b0f0;
   --c-web-bg:#e0f8fa;     --c-web-t:#0a6070;     --c-web-d:#90d0dc;
 }
-.phases-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.phases-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .phases-header{background:var(--black);padding:.625rem 1rem;display:flex;align-items:center;justify-content:space-between}
 .phases-header h2{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;margin:0}
 .add-phase-btn{padding:3px 10px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:transparent;font-size:11px;font-weight:500;color:rgba(255,255,255,.7);cursor:pointer;font-family:inherit}
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .tf-grand-cost{font-size:13px;font-weight:800;color:var(--black);display:block}
 
 /* Legend */
-.role-legend{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden;display:block}
+.role-legend{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;overflow:hidden;display:block}
 .legend-head{background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff}
 .legend-dept-block{border-top:1px solid var(--mid)}
 .legend-dept-block:first-child{border-top:none}
@@ -315,8 +315,8 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .legend-rate{font-size:10px;color:var(--t3);white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* EXPENSE SUGGESTIONS */
-.expense-suggestions{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.75rem;display:none}
-.exp-sug-head{background:var(--black);padding:.625rem 1rem;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius) var(--radius) 0 0}
+.expense-suggestions{background:#fff;border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem;display:none}
+.exp-sug-head{background:var(--black);padding:.625rem 1rem;display:flex;align-items:center;justify-content:space-between;border-radius:var(--r) var(--r) 0 0}
 .exp-sug-head h3{font-size:11px;font-weight:600;letter-spacing:.05em;color:#fff;margin:0;text-transform:uppercase}
 .exp-sug-stat{font-size:10px;color:rgba(255,255,255,.55)}
 .exp-sug-list{padding:.5rem 0}
@@ -1932,6 +1932,8 @@ function toggleRatesPanel() {
 
 function renderRatesPanel() {
   const grid = document.getElementById('ratesRoleGrid');
+  // local pct helper — needs barMin/barRange in scope when called
+  function pct(v, bMin, bRange) { return Math.max(0, Math.min(100, ((v - bMin) / bRange) * 100)).toFixed(1); }
   grid.innerHTML = ROLES.map(r => {
     const ins = RATE_INSIGHTS[r.id];
     const current = LIVE_RATES[r.id];
@@ -1982,10 +1984,10 @@ function renderRatesPanel() {
     const barRange = barMax - barMin;
         const lo = ref1 && ref2 ? Math.min(ref1, ref2) : (ref1 || ref2);
     const hi = ref1 && ref2 ? Math.max(ref1, ref2) : (ref1 || ref2);
-    const rangeLeft = lo ? pct(lo) : '0';
-    const rangeWidth = (lo && hi) ? (parseFloat(pct(hi)) - parseFloat(pct(lo))).toFixed(1) : '0';
-    const currentPct = pct(current);
-    const avgBilledPct = avgBilled ? pct(avgBilled) : null;
+    const rangeLeft = lo ? pct(lo, barMin, barRange) : '0';
+    const rangeWidth = (lo && hi) ? (parseFloat(pct(hi, barMin, barRange)) - parseFloat(pct(lo, barMin, barRange))).toFixed(1) : '0';
+    const currentPct = pct(current, barMin, barRange);
+    const avgBilledPct = avgBilled ? pct(avgBilled, barMin, barRange) : null;
 
     return `<div class="rates-role-item" id="rri_${r.id}">
       <div class="rri-top">

@@ -1509,50 +1509,35 @@ function updateCommentToggle(pi) {
 }
 
 function renderRoleLegend() {
-  // Render into popover instead of sidebar
   var el = document.getElementById('legendPopoverInner');
   if (!el) return;
   var roleDept = {};
   DEPTS.forEach(function(d) { d.roles.forEach(function(r) { roleDept[r] = d.id; }); });
-  el.innerHTML = '<div style="background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff">Role reference</div>' +
-    DEPTS.map(function(d) {
-      var roles = ROLES.filter(function(r) { return roleDept[r.id] === d.id; });
-      return '<div class="legend-dept-block">' +
-        '<div class="legend-dept-label dept-' + deptKey(d.id) + '">' + d.id + '</div>' +
-        roles.map(function(r) {
-          return '<div class="legend-role">' +
-            '<span class="legend-short">' + r.name + '</span>' +
-            '<span class="legend-full">' + r.fullName + '</span>' +
-            '<span class="legend-rate">' + fmt(r.rate) + '/hr</span>' +
-          '</div>';
-        }).join('') +
+  var html = '<div style="background:var(--black);padding:.5rem .875rem;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff">Role reference</div>';
+  DEPTS.forEach(function(d) {
+    var roles = ROLES.filter(function(r) { return roleDept[r.id] === d.id; });
+    var dk = deptKey(d.id);
+    // Dept label
+    var deptColors = {
+      account:  'background:#ddeeff;color:#1a4491',
+      social:   'background:#fff0dd;color:#8a4a08',
+      creative: 'background:#edfaed;color:#1a5c1a',
+      studios:  'background:#f0eaff;color:#4820a0',
+      web:      'background:#e0f8fa;color:#0a6070'
+    };
+    var deptStyle = deptColors[dk] || 'background:#f5f5f5;color:#333';
+    html += '<div style="' + deptStyle + ';padding:.25rem .875rem .15rem;font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;">' + d.id + '</div>';
+    // Role rows — short name + full name only, no rate
+    roles.forEach(function(r) {
+      html += '<div style="display:flex;align-items:center;gap:.5rem;padding:.28rem .875rem;border-bottom:1px solid #f0efe9;">' +
+        '<span style="font-size:11px;font-weight:700;color:#111;min-width:56px;flex-shrink:0;">' + r.name + '</span>' +
+        '<span style="font-size:11px;color:#6b6860;">' + r.fullName + '</span>' +
       '</div>';
-    }).join('');
+    });
+  });
+  el.innerHTML = html;
 }
 
-function toggleLegendPopover(e) {
-  e.stopPropagation();
-  var pop = document.getElementById('legendPopover');
-  if (!pop) return;
-  var isOpen = pop.classList.toggle('open');
-  if (isOpen) {
-    renderRoleLegend();
-    // Position below the button
-    var btn = e.currentTarget;
-    var rect = btn.getBoundingClientRect();
-    pop.style.top = (rect.bottom + 6) + 'px';
-    pop.style.right = (window.innerWidth - rect.right) + 'px';
-    // Close on click outside
-    setTimeout(function() {
-      document.addEventListener('click', function closePop(ev) {
-        if (!pop.contains(ev.target)) {
-          pop.classList.remove('open');
-          document.removeEventListener('click', closePop);
-        }
-      });
-    }, 0);
-  }
-}
 
 function renderFootTotals() {
   var foot = document.getElementById('estFoot');

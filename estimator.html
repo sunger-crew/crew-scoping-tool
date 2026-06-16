@@ -5,6 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2130,6 +2131,348 @@ function copyScopeDesc() {
   }).catch(function() {
     textarea.select();
     document.execCommand('copy');
+  });
+}
+
+
+// ─── EXPORT TO PPT ────────────────────────────────────────────────────────────
+function exportToPPT() {
+  if (typeof PptxGenJS === 'undefined') {
+    alert('PPT export library not loaded. Please check your internet connection and try again.');
+    return;
+  }
+
+  var btn = document.getElementById('exportPptBtn');
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+
+  var projectName = document.getElementById('projectName') ? document.getElementById('projectName').value : '';
+  var clientName  = document.getElementById('clientName')  ? document.getElementById('clientName').value  : '';
+  var svcLabel    = currentSvc ? (document.getElementById('svcSelect') ? document.getElementById('svcSelect').options[document.getElementById('svcSelect').selectedIndex].text : currentSvc) : '';
+  var scopeText   = document.getElementById('scopeTextarea') ? document.getElementById('scopeTextarea').value : '';
+  var totalLabor  = totalLabor ? fmt(window._totalLabor || 0) : '$0';
+  var totalHC     = hardCosts.reduce(function(s,h){ return s + (h.qty||1)*(h.rate||0); }, 0);
+  var totalEst    = (window._totalLabor || 0) + totalHC;
+  var dateStr     = new Date().toLocaleDateString('en-CA', {year:'numeric',month:'long',day:'numeric'});
+
+  // Recalculate totals live
+  var laborAmt = phases.reduce(function(s,p){
+    return s + ROLES.reduce(function(rs,r,ri){ return rs + (p.hrs[ri]||0)*r.rate; },0);
+  }, 0);
+  var hcAmt = hardCosts.reduce(function(s,h){ return s + (h.qty||1)*(h.rate||0); },0);
+  var totalAmt = laborAmt + hcAmt;
+  var totalHrs = phases.reduce(function(s,p){ return s + p.hrs.reduce(function(a,b){ return a+b; },0); },0);
+
+  // ── Colours & fonts ──────────────────────────────────────────────────────
+  var BLACK  = '111110';
+  var WHITE  = 'FFFFFF';
+  var OFF    = 'F5F3EF';
+  var ACCENT = 'E8472A';
+  var T2     = '6B6860';
+  var T3     = 'A8A49E';
+  var FONT   = 'Calibri';
+
+  var pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 inches
+  pptx.title  = (projectName || svcLabel || 'Scope') + ' — Crew';
+
+  // ── SLIDE 1: Cover ────────────────────────────────────────────────────────
+  var s1 = pptx.addSlide();
+  s1.background = { color: BLACK };
+
+  // CREW wordmark top-left
+  s1.addText('CREW', {
+    x:0.5, y:0.45, w:2, h:0.4,
+    fontSize:18, bold:true, color:WHITE,
+    fontFace:FONT, charSpacing:8
+  });
+
+  // Divider line
+  s1.addShape(pptx.ShapeType.rect, {
+    x:0.5, y:0.95, w:12.33, h:0.02,
+    fill:{ color:'FFFFFF', transparency:80 }, line:{ color:'FFFFFF', transparency:80 }
+  });
+
+  // Service type label
+  s1.addText(svcLabel.toUpperCase(), {
+    x:0.5, y:1.3, w:10, h:0.35,
+    fontSize:11, bold:true, color:ACCENT,
+    fontFace:FONT, charSpacing:5
+  });
+
+  // Project name (large)
+  var coverTitle = projectName || svcLabel || 'Project Scope';
+  s1.addText(coverTitle, {
+    x:0.5, y:1.8, w:10, h:1.8,
+    fontSize:48, bold:true, color:WHITE,
+    fontFace:FONT, valign:'top', wrap:true
+  });
+
+  // Client name
+  if (clientName) {
+    s1.addText('Prepared for ' + clientName, {
+      x:0.5, y:5.6, w:8, h:0.4,
+      fontSize:14, color:'CCCCCC', fontFace:FONT
+    });
+  }
+
+  // Date
+  s1.addText(dateStr, {
+    x:0.5, y:6.1, w:8, h:0.35,
+    fontSize:11, color:T3, fontFace:FONT
+  });
+
+  // "Prepared by Crew" bottom right
+  s1.addText('Prepared by Crew Marketing Partners', {
+    x:7, y:6.9, w:5.83, h:0.3,
+    fontSize:9, color:'666666', fontFace:FONT, align:'right'
+  });
+
+  // ── SLIDE 2: Scope Description ────────────────────────────────────────────
+  if (scopeText.trim()) {
+    var s2 = pptx.addSlide();
+    s2.background = { color: WHITE };
+
+    // Top accent bar
+    s2.addShape(pptx.ShapeType.rect, {
+      x:0, y:0, w:13.33, h:0.08,
+      fill:{ color:ACCENT }, line:{ color:ACCENT }
+    });
+
+    // CREW wordmark
+    s2.addText('CREW', {
+      x:0.5, y:0.25, w:2, h:0.35,
+      fontSize:13, bold:true, color:BLACK,
+      fontFace:FONT, charSpacing:6
+    });
+
+    // Slide title
+    s2.addText('Project Scope', {
+      x:0.5, y:0.75, w:12.33, h:0.55,
+      fontSize:28, bold:true, color:BLACK, fontFace:FONT
+    });
+
+    if (clientName || projectName) {
+      s2.addText((clientName ? clientName + (projectName ? ' — ' : '') : '') + (projectName || ''), {
+        x:0.5, y:1.35, w:12.33, h:0.3,
+        fontSize:12, color:T2, fontFace:FONT
+      });
+    }
+
+    // Divider
+    s2.addShape(pptx.ShapeType.rect, {
+      x:0.5, y:1.75, w:12.33, h:0.02,
+      fill:{ color:BLACK, transparency:85 }, line:{ color:BLACK, transparency:85 }
+    });
+
+    // Parse scope text into sections
+    var lines = scopeText.split('\n');
+    var sections = [];
+    var currentSection = null;
+
+    lines.forEach(function(line) {
+      var trimmed = line.trim();
+      if (!trimmed) return;
+
+      // Detect section headers (lines not starting with • or ·, not a note)
+      if (!trimmed.startsWith('•') && !trimmed.startsWith('·') && !trimmed.startsWith('·') &&
+          !trimmed.startsWith('Note') && !trimmed.startsWith('*') &&
+          (trimmed.endsWith(':') || sections.length === 0)) {
+        currentSection = { header: trimmed.replace(/:$/, ''), items: [] };
+        sections.push(currentSection);
+      } else if (currentSection) {
+        currentSection.items.push(trimmed);
+      } else {
+        sections.push({ header: null, items: [trimmed] });
+        currentSection = sections[sections.length - 1];
+      }
+    });
+
+    // Render sections into 2 columns if there are many
+    var yPos = 1.9;
+    var xLeft = 0.5;
+    var xRight = 7.0;
+    var colW = 6.0;
+    var useTwo = sections.length >= 4;
+    var col = 0;
+
+    sections.forEach(function(sec, idx) {
+      var x = useTwo ? (col === 0 ? xLeft : xRight) : xLeft;
+      var w = useTwo ? colW : 12.33;
+
+      if (sec.header && !sec.header.match(/^(Note|Exclusion|\*)/i)) {
+        // Section label
+        s2.addText(sec.header.toUpperCase(), {
+          x:x, y:yPos, w:w, h:0.28,
+          fontSize:9, bold:true, color:ACCENT,
+          fontFace:FONT, charSpacing:3
+        });
+        yPos += 0.3;
+      }
+
+      sec.items.forEach(function(item) {
+        var isNote = item.match(/^(Note|Exclusion|\*)/i);
+        var isBullet = item.startsWith('•') || item.startsWith('·');
+        var cleanItem = item.replace(/^[•·]\s*/, '').replace(/^·\s*/, '');
+
+        if (isNote) {
+          s2.addText(cleanItem, {
+            x:x, y:yPos, w:w, h:0.25,
+            fontSize:8.5, italic:true, color:T3, fontFace:FONT, wrap:true
+          });
+          yPos += 0.3;
+        } else if (isBullet) {
+          s2.addText(cleanItem, {
+            x:x+0.15, y:yPos, w:w-0.2, h:0.25,
+            fontSize:10.5, color:BLACK, fontFace:FONT, wrap:true,
+            bullet:{ type:'bullet', characterCode:'2022', indent:5 }
+          });
+          yPos += 0.28;
+        } else {
+          // Body text
+          s2.addText(item, {
+            x:x, y:yPos, w:w, h:0.35,
+            fontSize:11, color:T2, fontFace:FONT, wrap:true
+          });
+          yPos += 0.38;
+        }
+      });
+
+      yPos += 0.15; // gap between sections
+
+      // Switch column
+      if (useTwo && col === 0 && idx === Math.floor(sections.length / 2) - 1) {
+        col = 1;
+        yPos = 1.9;
+      }
+    });
+
+    // Footer
+    s2.addText('Crew Marketing Partners  ·  Internal use only', {
+      x:0.5, y:7.1, w:12.33, h:0.25,
+      fontSize:8, color:T3, fontFace:FONT, align:'center'
+    });
+  }
+
+  // ── SLIDE 3: Investment ───────────────────────────────────────────────────
+  var s3 = pptx.addSlide();
+  s3.background = { color: WHITE };
+
+  // Top accent bar
+  s3.addShape(pptx.ShapeType.rect, {
+    x:0, y:0, w:13.33, h:0.08,
+    fill:{ color:ACCENT }, line:{ color:ACCENT }
+  });
+
+  // CREW wordmark
+  s3.addText('CREW', {
+    x:0.5, y:0.25, w:2, h:0.35,
+    fontSize:13, bold:true, color:BLACK, fontFace:FONT, charSpacing:6
+  });
+
+  // Slide title
+  s3.addText('Investment Summary', {
+    x:0.5, y:0.75, w:12.33, h:0.55,
+    fontSize:28, bold:true, color:BLACK, fontFace:FONT
+  });
+
+  if (clientName || projectName) {
+    s3.addText((clientName ? clientName + (projectName ? ' — ' : '') : '') + (projectName || ''), {
+      x:0.5, y:1.35, w:12.33, h:0.3,
+      fontSize:12, color:T2, fontFace:FONT
+    });
+  }
+
+  // Divider
+  s3.addShape(pptx.ShapeType.rect, {
+    x:0.5, y:1.75, w:12.33, h:0.02,
+    fill:{ color:BLACK, transparency:85 }, line:{ color:BLACK, transparency:85 }
+  });
+
+  // Investment metric cards
+  var metrics = [
+    { label:'TOTAL LABOR', value: '$' + laborAmt.toLocaleString('en-CA') },
+    { label:'EXTERNAL EXPENSES', value: hcAmt > 0 ? '$' + hcAmt.toLocaleString('en-CA') : 'TBD' },
+    { label:'TOTAL INVESTMENT', value: '$' + totalAmt.toLocaleString('en-CA') },
+  ];
+
+  var cardW = 3.6;
+  var cardH = 1.5;
+  var cardY = 2.1;
+  var gap = 0.4;
+  var startX = (13.33 - (metrics.length * cardW + (metrics.length-1) * gap)) / 2;
+
+  metrics.forEach(function(m, i) {
+    var cx = startX + i * (cardW + gap);
+    var isTotal = i === metrics.length - 1;
+
+    // Card background
+    s3.addShape(pptx.ShapeType.rect, {
+      x:cx, y:cardY, w:cardW, h:cardH,
+      fill:{ color: isTotal ? BLACK : OFF },
+      line:{ color: isTotal ? BLACK : 'E8E5E0', width:1 },
+      shadow:{ type:'outer', blur:4, offset:2, angle:270, color:'000000', opacity:0.06 }
+    });
+
+    // Label
+    s3.addText(m.label, {
+      x:cx+0.2, y:cardY+0.22, w:cardW-0.4, h:0.3,
+      fontSize:9, bold:true, color: isTotal ? 'AAAAAA' : T3,
+      fontFace:FONT, charSpacing:3
+    });
+
+    // Value
+    s3.addText(m.value, {
+      x:cx+0.2, y:cardY+0.6, w:cardW-0.4, h:0.65,
+      fontSize:32, bold:true, color: isTotal ? WHITE : BLACK,
+      fontFace:FONT
+    });
+  });
+
+  // Hard costs line items (if any)
+  if (hardCosts.length > 0) {
+    var hcY = cardY + cardH + 0.5;
+    s3.addText('EXTERNAL EXPENSES', {
+      x:0.5, y:hcY, w:12.33, h:0.28,
+      fontSize:9, bold:true, color:ACCENT, fontFace:FONT, charSpacing:3
+    });
+    hcY += 0.3;
+
+    hardCosts.forEach(function(hc) {
+      var lineTotal = (hc.qty||1) * (hc.rate||0);
+      s3.addText('• ' + hc.desc, {
+        x:0.5, y:hcY, w:9, h:0.26,
+        fontSize:11, color:T2, fontFace:FONT
+      });
+      s3.addText('$' + lineTotal.toLocaleString('en-CA'), {
+        x:9.5, y:hcY, w:3.33, h:0.26,
+        fontSize:11, color:BLACK, fontFace:FONT, align:'right', bold:true
+      });
+      hcY += 0.28;
+    });
+  }
+
+  // Note about billing
+  s3.addText('This investment excludes applicable taxes. Payment terms as per your Crew services agreement.', {
+    x:0.5, y:6.3, w:12.33, h:0.35,
+    fontSize:9, italic:true, color:T3, fontFace:FONT, align:'center'
+  });
+
+  // Footer
+  s3.addText('Crew Marketing Partners  ·  ' + dateStr, {
+    x:0.5, y:7.1, w:12.33, h:0.25,
+    fontSize:8, color:T3, fontFace:FONT, align:'center'
+  });
+
+  // ── Generate & download ────────────────────────────────────────────────────
+  var filename = ((clientName || 'Crew') + ' — ' + (projectName || svcLabel || 'Scope') + '.pptx')
+    .replace(/[^a-zA-Z0-9 \-–—\.]/g, '').trim();
+
+  pptx.writeFile({ fileName: filename }).then(function() {
+    if (btn) { btn.textContent = '↓ Export to PPT'; btn.disabled = false; }
+  }).catch(function(err) {
+    console.error('PPT export error:', err);
+    if (btn) { btn.textContent = '↓ Export to PPT'; btn.disabled = false; }
+    alert('Export failed. Please try again.');
   });
 }
 

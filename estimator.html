@@ -1539,6 +1539,28 @@ function renderRoleLegend() {
 }
 
 
+function toggleLegendPopover(e) {
+  e.stopPropagation();
+  var pop = document.getElementById('legendPopover');
+  if (!pop) return;
+  var isOpen = pop.classList.toggle('open');
+  if (isOpen) {
+    renderRoleLegend();
+    var btn = e.currentTarget;
+    var rect = btn.getBoundingClientRect();
+    pop.style.top = (rect.bottom + 4) + 'px';
+    pop.style.right = (window.innerWidth - rect.right) + 'px';
+    setTimeout(function() {
+      document.addEventListener('click', function closePop(ev) {
+        if (!pop.contains(ev.target)) {
+          pop.classList.remove('open');
+          document.removeEventListener('click', closePop);
+        }
+      });
+    }, 0);
+  }
+}
+
 function renderFootTotals() {
   var foot = document.getElementById('estFoot');
   if (!foot) return;

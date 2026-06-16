@@ -392,6 +392,87 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .below-summary .tp-row.total { margin-top:.35rem; padding-top:.5rem; }
 .below-summary .tp-row.total .tp-label { color:rgba(255,255,255,.8); font-size:14px; font-weight:600; }
 .below-summary .tp-row.total .tp-val { font-size:20px; font-weight:800; }
+
+/* ── SCOPE DESCRIPTION ────────────────────────────────────────────────────── */
+.scope-section {
+  margin-top:14px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  display:none;
+}
+.scope-section.visible { display:block; }
+.scope-head {
+  background:var(--black);
+  padding:.625rem 1rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.scope-head h2 {
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#fff;
+  margin:0;
+}
+.scope-head-actions {
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.scope-copy-btn {
+  padding:3px 10px;
+  border-radius:3px;
+  border:1px solid rgba(255,255,255,.2);
+  background:transparent;
+  font-size:11px;
+  font-weight:500;
+  color:rgba(255,255,255,.7);
+  cursor:pointer;
+  font-family:inherit;
+  transition:all .12s;
+}
+.scope-copy-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+.scope-reset-btn {
+  padding:3px 10px;
+  border-radius:3px;
+  border:1px solid rgba(255,255,255,.12);
+  background:transparent;
+  font-size:11px;
+  font-weight:400;
+  color:rgba(255,255,255,.4);
+  cursor:pointer;
+  font-family:inherit;
+  transition:all .12s;
+}
+.scope-reset-btn:hover { color:rgba(255,255,255,.7); border-color:rgba(255,255,255,.2); }
+.scope-hint {
+  padding:.5rem 1rem;
+  font-size:11px;
+  color:var(--t3);
+  background:var(--off);
+  border-bottom:1px solid var(--mid);
+}
+.scope-textarea {
+  width:100%;
+  min-height:220px;
+  padding:1rem;
+  border:none;
+  font-family:'Inter','Helvetica Neue',Arial,sans-serif;
+  font-size:13px;
+  line-height:1.65;
+  color:var(--black);
+  background:#fff;
+  resize:vertical;
+  outline:none;
+  box-sizing:border-box;
+}
+.scope-textarea:focus {
+  background:#fefefe;
+}
 </style>
 </head>
 <body><script>
@@ -598,6 +679,19 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       </div>
     </div>
 
+
+      <!-- SCOPE DESCRIPTION -->
+      <div class="scope-section" id="scopeSection">
+        <div class="scope-head">
+          <h2>Project scope description</h2>
+          <div class="scope-head-actions">
+            <button class="scope-reset-btn" onclick="resetScopeDesc()" title="Restore default description">↺ Reset</button>
+            <button class="scope-copy-btn" onclick="copyScopeDesc()">Copy to clipboard</button>
+          </div>
+        </div>
+        <div class="scope-hint">Draft scope for client proposals — edit as needed before copying to your proposal template.</div>
+        <textarea class="scope-textarea" id="scopeTextarea" spellcheck="true" placeholder="Select a service type above to load the scope description..."></textarea>
+      </div>
 
     <!-- BELOW GRID -->
     <div class="below-grid">
@@ -1316,6 +1410,344 @@ const EXPENSE_TYPES = {
   },
 };
 
+const SCOPE_DESCRIPTIONS = {
+  brand_strategy: `Your brand is more than a logo — it's the foundation everything else is built on. A Brand Strategy defines who you are, who you're for, and how you show up in the market. Done right, it becomes the brief for every creative decision that follows.
+
+What's included:
+• Glass Vault Discovery Session — an interactive workshop to align on brand direction, audience, and positioning
+• Brand Foundation — purpose, values, personality, tone, and brand essence
+• Brand Platform — the emotional and functional territory the brand will own
+• Visual Direction Boards — 2–3 aesthetic directions to explore identity
+• Brand Identity — logo concepts, colour palette, typography system
+• Logo Guidelines document
+
+To get the most from this: Come prepared with a comprehensive overview of your brand, target audience, competitive landscape, and available assets. Consolidated feedback at each stage keeps the project on track.
+
+Note: Does not include 3rd party costs such as photography, stock imagery, or translation.`,
+  campaign_strategy: `A great campaign doesn't start with an execution — it starts with a territory. Campaign Strategy is about finding the idea that's ownable, that influences behaviour, and that gives your entire marketing program a clear jumping-off point.
+
+What's included:
+• Creative brief development based on approved media plan and objectives
+• Presentation of 2–3 distinct campaign territories
+• Refinement of 1 selected territory into a fleshed-out concept
+• Concept shown across a maximum of 2 tactics
+• Up to 2 rounds of revisions on the selected direction
+
+To get the most from this: Provide an approved media plan, brand guidelines, and clear campaign objectives before kick-off.
+
+Note: Does not include asset production or media placement. Photography and stock imagery sourced separately.`,
+  campaign_rollout: `With an approved concept in hand, this is where the idea comes to life across every format your media plan requires. Crew manages the full asset production process — designed to spec, on brand, and ready for trafficking.
+
+What's included:
+• Design and copywriting for all required asset formats based on approved media plan
+• Graphic elements, colour, typography, and imagery for each deliverable
+• Stock image sourcing where applicable
+• Up to 2 rounds of revisions per asset: 1st revision directional, 2nd revision minor corrections only
+• Final production-ready files delivered to media specifications
+
+To get the most from this: Provide the approved campaign concept, media asset tracker with specs, and brand asset folder (photography, packaging mock-ups) before production begins.
+
+Note: Does not include media placement, printing, photography shoots, or stock image purchases.`,
+  packaging: `Your packaging is often the first — and only — moment a consumer has with your brand before deciding to buy. A Packaging Strategy ensures that moment is earned through design that engages, messaging that resonates, and a visual system that's built to scale.
+
+What's included:
+• Glass Vault Discovery Session to understand the brand, consumer, and competitive shelf context
+• Brand Platform and visual direction development
+• PDP (primary display panel) concept design — up to 3 concepts for hero SKU
+• All-panel rollout of selected direction
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+• Production-ready mechanical files
+
+To get the most from this: Provide an approved dieline, UPC, NFT, ingredient list, and all mandatory regulatory information before design begins.
+
+Note: Client is responsible for trademark, translation, regulatory, and legal review of all designs. Does not include 3rd party costs such as photography, printing, or production coordination.`,
+  brand_guidelines: `Your brand has been built — now it needs to be protected. A Brand Guidelines document ensures that every touchpoint, partner, and team member shows up consistently, building recognition and equity over time.
+
+What's included:
+• 15+ page Brand Guidelines document, including:
+  · Who We Are — purpose, mission, vision, values
+  · Brand Voice and Tone
+  · Logo usage, formats, and clear space rules
+  · Colour palette (Pantone, CMYK, RGB, HEX)
+  · Typography system
+  · Photography and imagery direction
+  · Brand application examples
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+
+To get the most from this: Provide all approved brand assets (logo files, strategy documents) upfront. Mock-ups will draw from existing identity work — net-new mock-up creation is not included.
+
+Note: Does not include translation or 3rd party expenses.`,
+  presentation_deck: `Whether it's a retailer presentation, investor pitch, or internal strategy deck, the way you tell your story matters. Crew designs presentations that hold the brand, structure the narrative, and make the ask clear.
+
+What's included:
+• One cover slide layout and up to four distinct content slide layouts
+• Master style sheet for text, colour, graphic elements, and imagery
+• Copywriting for up to 12 slides (max 150 words/slide)
+• Font selected for universal device compatibility
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+• Final file delivered in PowerPoint or Google Slides
+
+To get the most from this: Provide brand guidelines, logo files, and a clear content outline with key messages per slide before design begins.
+
+Note: Does not include 3rd party costs such as stock photography, custom illustration, or data visualization.`,
+  single_execution: `Sometimes you need one great piece — a sell sheet that opens doors, an ad that stops the scroll, a print piece that works hard at retail. Crew develops single creative executions with the same rigour as a full campaign.
+
+What's included:
+• Development of two design concepts for the requested format
+• Copywriting for headlines, subheadlines, body copy, and calls-to-action
+• Design of graphic elements, colour, typography, and imagery
+• Stock image sourcing (where applicable)
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+• Final production-ready file in required format
+
+To get the most from this: Provide brand guidelines, approved messaging, and any mandatory information (UPC, claims, regulatory copy) before work begins.
+
+Note: Does not include 3rd party costs such as printing, media placement, or photography.`,
+  tradeshow: `Tradeshows are cluttered environments — the brands that win are the ones that are impossible to walk past. Crew designs tradeshow experiences that are bold, clear, and built to start conversations.
+
+What's included:
+• Development of one space concept including backdrop, display arrangement, banners (as applicable), and engagement area
+• Design of graphic elements, colour, typography, and imagery
+• Copywriting for headline and supporting copy
+• Vendor sourcing and production price list
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+• Final production files prepared and delivered to chosen vendor specifications
+
+To get the most from this: Provide brand guidelines, approved messaging, and any photography or video assets before design begins. Client is responsible for payment and logistics of all production elements.
+
+Note: Does not include 3rd party costs such as printing, building, shipping, set-up, or kitting.`,
+  naming: `A name is one of the most permanent brand decisions you'll make. Finding one that's ownable, trademarkable, and resonates with both your team and your consumer takes a structured process — and a bit of creative courage.
+
+What's included:
+• Naming brief and alignment session on criteria and direction
+• Development of up to 5 name options
+• Name ideation and creative exploration session
+• Name grading against defined evaluation criteria
+• Cursory vetting: domain availability, social handle availability, and category trademark search
+• Up to 2 rounds of revisions
+• Final recommendation with rationale
+
+To get the most from this: Come prepared with a clear brief on your target audience, competitive context, and any names or directions to avoid.
+
+Note: Does not include formal legal trademark registration or translation vetting. Client is responsible for final trademark clearance.`,
+  digital_campaign: `Getting digital campaigns to perform requires the right setup, the right targeting, and consistent optimization. Crew's digital team manages the full campaign lifecycle — from platform architecture through to ongoing performance management.
+
+What's included:
+• Audit of existing digital platforms and ad accounts
+• Platform account setup, pixel implementation, and conversion tracking
+• Audience creation and targeting strategy
+• Campaign, ad set, and ad creation across selected platforms
+• Monthly performance monitoring: bid management, budget pacing, and A/B testing
+• Monthly reporting with insights and recommendations
+
+To get the most from this: Provide access to existing ad accounts, analytics platforms, and approved creative assets. Define campaign objectives and KPIs before kick-off.
+
+Note: Media spend (ad budget) is billed separately and directly by the platform — not included in Crew's fee.`,
+  paid_media: `A strong media plan doesn't just allocate budget — it connects the right message to the right person at the right moment. Crew's digital team develops a full paid media strategy grounded in your objectives, your audience, and your competitive landscape.
+
+What's included:
+• Audit of current digital channels and historical campaign performance
+• Channel mix recommendation and audience strategy
+• Campaign architecture: platform selection, targeting, flighting, and budget allocation
+• Creative brief for required ad formats
+• KPI framework and measurement plan
+• Final strategy document and 60-minute presentation
+
+To get the most from this: Provide access to existing ad accounts, past campaign data, and brand guidelines. Define campaign objectives and budget parameters before kick-off.
+
+Note: Does not include campaign setup, media spend, or creative production — each scoped separately.`,
+  owned_media: `Email remains one of the highest-return channels available — when it's done with consistency and good design. Crew builds templates that are on-brand and easy to use, so your team can send with confidence every time.
+
+What's included:
+• 1 branded email template (drag-and-drop) built in your ESP of choice
+• Template includes header, up to 3 body sections with varied content blocks, and footer
+• Copywriting and design for 1 initial email send
+• Up to 2 rounds of revisions: 1st revision directional, 2nd revision minor corrections only
+• Final template built and delivered in platform
+
+To get the most from this: Provide brand guidelines, logo files, and access to your email platform (e.g. Mailchimp, Klaviyo, HubSpot) before work begins.
+
+Note: Does not include ongoing email creation beyond the initial send, list management, or platform subscription costs.`,
+  social_content: `Consistent, on-brand social content is what builds audiences over time. Crew manages the full monthly content cycle — strategy, creation, and reporting — so your brand shows up every week with content worth stopping for.
+
+What's included:
+• Monthly content calendar and strategic brief by platform
+• Content creation: copywriting and design/video for agreed post volume
+• Platform-specific formatting and optimization
+• Scheduling and publishing
+• Community monitoring and response
+• Monthly performance report with insights and recommendations
+
+To get the most from this: Provide brand guidelines, approved messaging pillars, and any product photography or assets each month. Timely review and approval of the content calendar keeps production on schedule.
+
+Note: Does not include paid amplification/boosting (scoped separately), influencer fees, or platform subscription costs.`,
+  social_influencer: `The most trusted recommendations don't come from brands — they come from people your audience already follows. Crew manages the full influencer process, from finding the right voices to measuring the results.
+
+What's included:
+• Influencer strategy: criteria, tier, platform, and campaign objectives
+• Shortlist development and vetting (engagement, audience alignment, brand fit)
+• Contracting, briefing, and product seeding coordination
+• Creative brief development and content approval process
+• Campaign monitoring, compliance checks, and performance tracking
+• Post-campaign report with content collection and key metrics
+
+To get the most from this: Provide product for seeding, brand guidelines, and approved key messaging before outreach begins. Influencer talent fees are scoped as a separate hard cost.
+
+Note: Influencer fees, product, shipping, and paid amplification are billed as external expenses in addition to Crew's management fee.`,
+  social_strategy: `Before you create content, you need to know what you're building toward. A Social Media Strategy gives your team a clear, platform-specific roadmap — content pillars, channel direction, and a plan that actually connects to business objectives.
+
+What's included:
+• Stakeholder discovery session
+• Full audit of existing social presence: content performance, audience, tone, and competitive benchmarking
+• Platform-specific recommendations and channel strategy
+• Content pillar development and messaging hierarchy
+• Target audience profiles with platform behaviour insights
+• Posting cadence and content type recommendations
+• Final strategy document and 60-minute presentation with one round of revisions
+
+To get the most from this: Provide access to all social accounts and analytics. Share background on current goals, past campaigns, and any brand guidelines.
+
+Note: Does not include content creation, community management, or paid media.`,
+  video: `Video is the format that builds brands fastest — when the concept is right and the production is tight. Crew develops video from script through final cut, managing creative direction, production, and post to deliver assets ready for any platform.
+
+What's included:
+• Creative brief and concept development
+• Script writing (up to 85 words / 30-second duration) and storyboard
+• Production management: talent casting, location, crew coordination
+• On-set creative direction
+• Post-production: edit, colour grade, audio mix, motion graphics (as applicable)
+• Format exports for required platforms and aspect ratios
+• Up to 2 rounds of revisions: 1 major, 1 minor
+
+To get the most from this: Provide completed brand guidelines or brand strategy, approved messaging, and any existing brand assets before pre-production begins.
+
+Note: Does not include 3rd party production costs (crew, talent, studio, location) which are scoped as external expenses. ASC/Telecaster approvals included where applicable.`,
+  photography: `Great photography is the asset that feeds everything else — packaging, social, web, sales decks. Crew manages the full production process, from sourcing the right photographer to delivering a final image library your team can use across every channel.
+
+What's included:
+• Creative brief and shot list development
+• Photographer sourcing, vetting, and selection
+• Pre-production coordination: props, location or studio, talent casting (where applicable)
+• On-set art direction and creative direction
+• Post-production: selects, retouching, and colour consistency
+• Final image library delivered in agreed formats and resolutions
+
+To get the most from this: Provide brand guidelines, reference imagery, and product samples before pre-production. Timely approvals at each stage keep the shoot on schedule.
+
+Note: Photographer fees, studio/location rental, talent, props, and other production costs are scoped as external expenses in addition to Crew's management and creative direction fee.`,
+  radio: `Radio and audio advertising cuts through when the script is tight and the concept is strong. Crew writes, produces, and delivers radio-ready spots — managing the full process from brief to final station-ready file.
+
+What's included:
+• One creative concept for a 30-second regional radio spot
+• Script writing (up to 85 words / 30-second duration)
+• 1 round of revisions (minor corrections)
+• Production liaison with recording studio and station
+• Final audio file delivered to broadcast specifications
+• ASC/Telecaster pre-clearance coordination (where applicable)
+
+To get the most from this: Provide completed brand guidelines or strategy, approved key messages, and any mandatory disclosure language before scripting begins.
+
+Note: Does not include 3rd party costs such as voice talent fees, studio recording time, or media placement. Multi-spot campaigns or additional cutdowns scoped separately.`,
+  web_build: `Your website is often the first place a potential customer decides whether you're worth their time. Crew designs and builds websites that reflect your brand, communicate your value clearly, and guide visitors toward the actions that matter most.
+
+What's included:
+• Discovery session: objectives, sitemap, and information architecture
+• UX wireframes for key page templates
+• Full responsive design concepts aligned to brand guidelines
+• CMS development (WordPress, Shopify, or agreed platform)
+• Content input, on-page SEO tagging, and Google Analytics setup
+• QA testing across devices and browsers
+• Launch support and handoff documentation
+
+To get the most from this: Provide approved copy and imagery for all pages, domain access, and hosting credentials before development begins. Timely feedback at each milestone keeps the project on schedule.
+
+Note: Does not include hosting fees, third-party plugin/theme licenses, photography, stock imagery, translation, or ongoing maintenance post-launch.`,
+  web_refresh: `Your brand has evolved — your website should too. A Web Refresh updates the look, feel, and user experience of your existing site without the cost and complexity of a full rebuild.
+
+What's included:
+• Audit of existing site: design, UX, content, and performance
+• Updated design concepts for key page templates
+• Responsive design implementation across desktop and mobile
+• Theme/template updates within existing CMS
+• Content updates and migration for agreed pages
+• QA testing and launch support
+
+To get the most from this: Provide updated brand guidelines, any new assets or copy, and CMS/hosting access before work begins.
+
+Note: Does not include new page development outside the agreed scope, photography, custom plugin development, or third-party license costs.`,
+  web_maintenance: `A website that isn't maintained is a liability. Crew's proactive maintenance program keeps your site secure, up to date, and performing — before issues have a chance to become problems.
+
+What's included:
+• CMS and plugin updates (ongoing)
+• Security monitoring and malware scanning
+• Regular site health checks
+• Minor content updates (within agreed monthly hours)
+• Monthly maintenance report
+
+To get the most from this: Provide admin access to your CMS and hosting environment. Flag any content updates or issues as they arise.
+
+Note: Major feature development, redesign, or new page builds are scoped separately. Recommended for all e-commerce and business-critical websites.`,
+  web_audit: `Before you invest in a new website or SEO campaign, you need to know exactly where you stand. A Website or SEO Audit gives you a clear, prioritized picture of what's working, what isn't, and where the biggest opportunities are.
+
+What's included:
+• Domain authority analysis (benchmarked against 2–3 competitors)
+• Current ranking keyword review
+• Competitive keyword and SERP landscape analysis
+• Technical SEO health check
+• UX and conversion opportunity identification
+• Prioritized recommendations report
+• 30–60 minute findings presentation
+
+To get the most from this: Provide access to Google Analytics, Google Search Console, and any existing keyword or campaign data before the audit begins.
+
+Note: Does not include implementation of recommendations — execution scoped separately based on audit findings.`,
+  agency_retainer: `Great marketing doesn't happen in projects — it happens through sustained strategic direction, consistent execution, and a team that acts like part of yours. The Crew Marketing Program (CMP) gives your organization the tools, team, and discipline to maximize every marketing dollar.
+
+What's included:
+• Bi-weekly tactical meetings with action planning
+• Monthly marketing activity review and calendar management
+• Quarterly strategic review and planning session
+• Budget tracking and reporting
+• Consulting and coaching availability between meetings
+• Crew Method training and team capacity building
+
+To get the most from this: Bring your team's priorities, challenges, and performance data to every meeting. The CMP is built on shared accountability — the more you bring, the more you get.
+
+Note: Creative, digital, and production work beyond the retainer hours is scoped and billed separately.`,
+  marketing_sprint: `You don't always need a full marketing strategy — sometimes you need the right framework fast. The Marketing Strategy Sprint applies Crew's 8-step methodology to the areas that matter most for your business right now, and delivers a clear, actionable plan.
+
+What's included:
+• Discovery questionnaire and kick-off session
+• Review of current research and available brand assets
+• Strategy development across selected focus areas from Crew's 8-step framework:
+  · Organizational direction (purpose, beliefs, objectives)
+  · Target audience and segmentation
+  · Brand positioning and competitive landscape
+  · Portfolio and pricing strategy
+  · Promotional strategy and channel mix
+  · 12-month marketing calendar and budget
+• Final strategy document (PPT) and 60-minute presentation
+• One round of revisions
+
+To get the most from this: Provide a comprehensive overview of your business, brand, and marketing history before the sprint begins.
+
+Note: Does not include creative execution, media planning, or production work.`,
+  research: `Good decisions start with good data. Crew designs, manages, and analyzes research programs that give you real consumer insight — not assumptions — to inform your brand, product, and marketing decisions.
+
+What's included:
+• Study design and research objectives alignment
+• Questionnaire or discussion guide development
+• Platform setup and participant coordination (survey, interviews, or focus groups)
+• Fieldwork management and quality control
+• Cross-tab analysis and key findings synthesis
+• Final report with executive summary
+• Client presentation of findings
+
+To get the most from this: Provide clear research objectives, target audience definition, and any existing brand or category data before the study begins.
+
+Note: Research panel, fieldwork, participant incentives, and platform costs are scoped as external expenses in addition to Crew's research management fee.`,
+};
+
 // ─── STATE ─────────────────────────────────────────────────────────────────────
 let currentSvc = null;
 let phases = [];        // [{name, timing, comment, hrs:[12 values]}, ...]
@@ -1376,6 +1808,7 @@ function loadTemplate() {
   renderPhases();
   renderHardCosts();
   renderExpenseSuggestions(svc);
+  loadScopeDesc(svc);
   updateSummary();
 }
 
@@ -1392,6 +1825,8 @@ function showEstimator() {
 }
 
 function resetEstimator() {
+  var ss = document.getElementById('scopeSection');
+  if (ss) ss.classList.remove('visible');
   currentSvc = null; phases = []; hardCosts = [];
   document.getElementById('svcSelect').value = '';
   document.getElementById('projName').value = '';
@@ -1653,6 +2088,49 @@ function addExpenseSuggestion(idx, svc) {
     btns[idx].style.cssText = 'background:#2a9d5c;color:#fff;border-color:#2a9d5c';
     setTimeout(() => { if(btns[idx]){btns[idx].textContent='+ Add';btns[idx].style.cssText='';} }, 1800);
   }
+}
+
+
+// ─── SCOPE DESCRIPTION ────────────────────────────────────────────────────────
+function loadScopeDesc(svc) {
+  var section = document.getElementById('scopeSection');
+  var textarea = document.getElementById('scopeTextarea');
+  if (!section || !textarea) return;
+  var desc = SCOPE_DESCRIPTIONS[svc] || '';
+  if (desc) {
+    textarea.value = desc;
+    section.classList.add('visible');
+  } else {
+    section.classList.remove('visible');
+  }
+}
+
+function resetScopeDesc() {
+  var textarea = document.getElementById('scopeTextarea');
+  if (!textarea || !currentSvc) return;
+  var desc = SCOPE_DESCRIPTIONS[currentSvc] || '';
+  if (desc && confirm('Reset to default scope description? Your edits will be lost.')) {
+    textarea.value = desc;
+  }
+}
+
+function copyScopeDesc() {
+  var textarea = document.getElementById('scopeTextarea');
+  if (!textarea) return;
+  var text = textarea.value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('.scope-copy-btn');
+    if (btn) {
+      var orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.style.background = 'rgba(42,157,92,.3)';
+      setTimeout(function() { btn.textContent = orig; btn.style.background = ''; }, 2000);
+    }
+  }).catch(function() {
+    textarea.select();
+    document.execCommand('copy');
+  });
 }
 
 function renderHardCosts() {

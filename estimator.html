@@ -1550,14 +1550,18 @@ function toggleLegendPopover(e) {
     var rect = btn.getBoundingClientRect();
     pop.style.top = (rect.bottom + 4) + 'px';
     pop.style.right = (window.innerWidth - rect.right) + 'px';
+    // Use capture phase so this fires before bubbling reaches document
+    // and check we're not clicking the button itself
+    function closePop(ev) {
+      if (!pop.contains(ev.target) && ev.target !== btn && !btn.contains(ev.target)) {
+        pop.classList.remove('open');
+        document.removeEventListener('click', closePop, true);
+      }
+    }
+    // Small delay so this click event doesn't immediately trigger closePop
     setTimeout(function() {
-      document.addEventListener('click', function closePop(ev) {
-        if (!pop.contains(ev.target)) {
-          pop.classList.remove('open');
-          document.removeEventListener('click', closePop);
-        }
-      });
-    }, 0);
+      document.addEventListener('click', closePop, true);
+    }, 150);
   }
 }
 

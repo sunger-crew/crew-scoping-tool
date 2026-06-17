@@ -474,6 +474,11 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
 .scope-textarea:focus {
   background:#fefefe;
 }
+
+.currency-toggle{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;height:36px}
+.cur-btn{padding:0 14px;border:none;background:transparent;font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;font-family:inherit;letter-spacing:.04em;transition:all .12s}
+.cur-btn:hover{background:var(--mid);color:var(--black)}
+.cur-btn.active{background:var(--black);color:#fff}
 </style>
 </head>
 <body><script>
@@ -562,6 +567,13 @@ footer{border-top:1px solid var(--border);padding:1.5rem 2rem;display:flex;justi
       <div class="field">
         <label>Client (optional)</label>
         <input type="text" id="clientName" placeholder="Client name" oninput="updateSummary()">
+      </div>
+      <div class="field" style="flex:0 0 auto">
+        <label>Currency</label>
+        <div class="currency-toggle" id="currencyToggle">
+          <button class="cur-btn active" id="curCAD" onclick="setCurrency('CAD')">CAD</button>
+          <button class="cur-btn" id="curUSD" onclick="setCurrency('USD')">USD</button>
+        </div>
       </div>
       <button class="btn-reset" onclick="resetEstimator()">Reset</button>
     </div>
@@ -2136,346 +2148,483 @@ function copyScopeDesc() {
 }
 
 
+
+function setCurrency(cur) {
+  currentCurrency = cur;
+  document.getElementById('curCAD').classList.toggle('active', cur === 'CAD');
+  document.getElementById('curUSD').classList.toggle('active', cur === 'USD');
+}
+
 // ─── EXPORT TO PPT ────────────────────────────────────────────────────────────
 function exportToPPT() {
   if (typeof PptxGenJS === 'undefined') {
     alert('PPT export library not loaded. Please check your internet connection and try again.');
     return;
   }
-
   var btn = document.getElementById('exportPptBtn');
-  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+  if (btn) { btn.textContent = 'Generating…'; btn.disabled = true; }
 
-  var projectName = document.getElementById('projectName') ? document.getElementById('projectName').value : '';
-  var clientName  = document.getElementById('clientName')  ? document.getElementById('clientName').value  : '';
-  var svcLabel    = currentSvc ? (document.getElementById('svcSelect') ? document.getElementById('svcSelect').options[document.getElementById('svcSelect').selectedIndex].text : currentSvc) : '';
-  var scopeText   = document.getElementById('scopeTextarea') ? document.getElementById('scopeTextarea').value : '';
-  var totalLabor  = totalLabor ? fmt(window._totalLabor || 0) : '$0';
-  var totalHC     = hardCosts.reduce(function(s,h){ return s + (h.qty||1)*(h.rate||0); }, 0);
-  var totalEst    = (window._totalLabor || 0) + totalHC;
-  var dateStr     = new Date().toLocaleDateString('en-CA', {year:'numeric',month:'long',day:'numeric'});
+  var pn      = (document.getElementById('projectName')||{}).value||'';
+  var cn      = (document.getElementById('clientName') ||{}).value||'';
+  var selEl   = document.getElementById('svcSelect');
+  var svcLbl  = selEl ? selEl.options[selEl.selectedIndex].text : (currentSvc||'');
+  var scopeTxt= (document.getElementById('scopeTextarea')||{}).value||'';
+  var isCad   = currentCurrency !== 'USD';
+  var now     = new Date();
+  var monthYr = now.toLocaleDateString('en-CA',{month:'long',year:'numeric'}).toUpperCase();
+  var dateStr = now.toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'});
+  var entity  = isCad ? 'Crew Marketing Partners ULC' : 'Crew Marketing US LP';
+  var cur     = isCad ? 'CAD' : 'USD';
+  var yr      = now.getFullYear();
 
-  // Recalculate totals live
   var laborAmt = phases.reduce(function(s,p){
-    return s + ROLES.reduce(function(rs,r,ri){ return rs + (p.hrs[ri]||0)*r.rate; },0);
-  }, 0);
-  var hcAmt = hardCosts.reduce(function(s,h){ return s + (h.qty||1)*(h.rate||0); },0);
-  var totalAmt = laborAmt + hcAmt;
-  var totalHrs = phases.reduce(function(s,p){ return s + p.hrs.reduce(function(a,b){ return a+b; },0); },0);
+    return s+ROLES.reduce(function(rs,r,ri){return rs+(p.hrs[ri]||0)*r.rate;},0);},0);
+  var hcAmt    = hardCosts.reduce(function(s,h){return s+(h.qty||1)*(h.rate||0);},0);
+  var totalAmt = laborAmt+hcAmt;
+  var totalHrs = phases.reduce(function(s,p){return s+p.hrs.reduce(function(a,b){return a+b;},0);},0);
+  function fmtM(n){ return (isCad?'$':'USD $')+Math.round(n).toLocaleString('en-CA'); }
 
-  // ── Colours & fonts ──────────────────────────────────────────────────────
-  var BLACK  = '111110';
-  var WHITE  = 'FFFFFF';
-  var OFF    = 'F5F3EF';
-  var ACCENT = 'E8472A';
-  var T2     = '6B6860';
-  var T3     = 'A8A49E';
-  var FONT   = 'Calibri';
+  // ── Exact brand tokens from template XML ──────────────────────────────────
+  var BLACK   = '010101';   // bg: cover, dividers
+  var WHITE   = 'FFFFFF';
+  var CITRON  = 'E1E92F';   // top bar on content slides (rect fill)
+  var CITRON2 = 'D1E000';   // cover accent line
+  var TXTBLK  = '000000';   // all body/title text on white slides
+  var TXTGRY  = '6B6860';   // secondary/footer text
+  var HV      = 'Helvetica';
+  var HV_LT   = 'Helvetica Light';
 
   var pptx = new PptxGenJS();
-  pptx.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 inches
-  pptx.title  = (projectName || svcLabel || 'Scope') + ' — Crew';
+  pptx.layout = 'LAYOUT_WIDE'; // 13.3333 × 7.5 in
+  pptx.title  = (cn||'Crew')+' — '+(pn||svcLbl||'Proposal');
 
-  // ── SLIDE 1: Cover ────────────────────────────────────────────────────────
+  // ── Shared helper: citron bar + content slide chrome ─────────────────────
+  function contentSlide(title) {
+    var sl = pptx.addSlide();
+    sl.background = { color: WHITE };
+    // Citron top bar — h=0.119 exact from template
+    sl.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
+    // Title — exact: [0.8188,1.2676 7.0507×0.4072] 40pt bold
+    sl.addText(title,{x:0.8188,y:1.2676,w:7.0507,h:0.4072,
+      fontSize:40,bold:true,color:TXTBLK,fontFace:HV});
+    // Rule — exact: x=0.9406 y=2.1031 w=12.3927
+    sl.addShape(pptx.ShapeType.rect,{x:0.9406,y:2.1031,w:12.3927,h:0.008,
+      fill:{color:TXTBLK},line:{color:TXTBLK}});
+    return sl;
+  }
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  function footer(sl, right) {
+    sl.addText('Crew Marketing Partners',
+      {x:0.5,y:7.15,w:5,h:0.22,fontSize:7.5,color:TXTGRY,fontFace:HV});
+    if (right) sl.addText(right,
+      {x:8,y:7.15,w:5.33,h:0.22,fontSize:7.5,color:TXTGRY,fontFace:HV,align:'right'});
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 1 — COVER
+  // Black bg. Bottom-right: MONTH YEAR at [8.281,5.114], citron line at
+  // y=5.659, then Client Name (was red 14pt bold) + Project Name (was red 12pt)
+  // at [8.281,5.896]. Top-left: Crew wordmark.
+  // ══════════════════════════════════════════════════════════════════════════
   var s1 = pptx.addSlide();
   s1.background = { color: BLACK };
 
-  // CREW wordmark top-left
-  s1.addText('CREW', {
-    x:0.5, y:0.45, w:2, h:0.4,
-    fontSize:18, bold:true, color:WHITE,
-    fontFace:FONT, charSpacing:8
-  });
+  // Crew wordmark — top-left
+  s1.addText('Crew',{x:0.45,y:0.3,w:2.5,h:0.6,
+    fontSize:32,bold:true,color:WHITE,fontFace:HV_LT,charSpacing:3});
+  s1.addText('®',{x:1.6,y:0.24,w:0.3,h:0.3,fontSize:9,color:WHITE,fontFace:HV});
 
-  // Divider line
-  s1.addShape(pptx.ShapeType.rect, {
-    x:0.5, y:0.95, w:12.33, h:0.02,
-    fill:{ color:'FFFFFF', transparency:80 }, line:{ color:'FFFFFF', transparency:80 }
-  });
-
-  // Service type label
-  s1.addText(svcLabel.toUpperCase(), {
-    x:0.5, y:1.3, w:10, h:0.35,
-    fontSize:11, bold:true, color:ACCENT,
-    fontFace:FONT, charSpacing:5
-  });
-
-  // Project name (large)
-  var coverTitle = projectName || svcLabel || 'Project Scope';
-  s1.addText(coverTitle, {
-    x:0.5, y:1.8, w:10, h:1.8,
-    fontSize:48, bold:true, color:WHITE,
-    fontFace:FONT, valign:'top', wrap:true
-  });
-
-  // Client name
-  if (clientName) {
-    s1.addText('Prepared for ' + clientName, {
-      x:0.5, y:5.6, w:8, h:0.4,
-      fontSize:14, color:'CCCCCC', fontFace:FONT
-    });
+  // Service type — top area, citron (replaces red "TIKTOK PROPOSAL" style label)
+  if (svcLbl) {
+    s1.addText(svcLbl.toUpperCase(),{x:0.45,y:1.1,w:7,h:0.35,
+      fontSize:11,bold:true,color:CITRON,fontFace:HV,charSpacing:3});
   }
 
-  // Date
-  s1.addText(dateStr, {
-    x:0.5, y:6.1, w:8, h:0.35,
-    fontSize:11, color:T3, fontFace:FONT
+  // MONTH YEAR — exact position [8.281,5.114], was non-red, keep white
+  s1.addText(monthYr,{x:8.281,y:5.1144,w:4.7,h:0.2693,
+    fontSize:10,bold:true,color:WHITE,fontFace:HV});
+
+  // Citron accent line — exact: x=8.3807 y=5.6588
+  s1.addShape(pptx.ShapeType.rect,{x:8.3807,y:5.6588,w:4.9526,h:0.022,
+    fill:{color:CITRON2},line:{color:CITRON2}});
+
+  // Client Name — was red 14pt bold → now WHITE, exact x=8.281 y=5.896
+  s1.addText(cn||'Client Name',{x:8.281,y:5.8961,w:4.7,h:0.45,
+    fontSize:14,bold:true,color:WHITE,fontFace:HV});
+
+  // Project Name — was red 12pt bold → WHITE, sits below client
+  s1.addText(pn||svcLbl||'',{x:8.281,y:6.3861,w:4.7,h:0.35,
+    fontSize:12,bold:false,color:'CCCCCC',fontFace:HV});
+
+  // Currency badge
+  s1.addText(cur,{x:8.281,y:6.9,w:0.65,h:0.26,
+    fontSize:8.5,bold:true,color:CITRON,fontFace:HV,align:'center',
+    fill:{color:'1A1A1A'},line:{color:CITRON2,width:0.5},margin:2});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 2 — SCOPE DESCRIPTION  (our addition, matches content slide chrome)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (scopeTxt.trim()) {
+    var s2 = contentSlide('Project Scope');
+    if (cn||pn) s2.addText([(cn||''),(pn||'')].filter(Boolean).join(' — '),
+      {x:0.8188,y:1.74,w:11,h:0.28,fontSize:11,color:TXTGRY,fontFace:HV});
+
+    // Parse sections
+    var lines=scopeTxt.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    var secs=[],cs=null;
+    lines.forEach(function(ln){
+      var bul=/^[•·\-]/.test(ln),note=/^(Note|Exclusion|\*)/.test(ln),hdr=!bul&&!note&&ln.endsWith(':');
+      if(hdr||!cs){cs={hdr:hdr?ln.replace(/:$/,''):null,items:[]};if(!hdr)cs.items.push({t:ln,b:false,n:false});secs.push(cs);}
+      else cs.items.push({t:ln.replace(/^[•·\-]\s*/,''),b:bul,n:note});
+    });
+    var two=secs.length>=4,cW=two?5.4:11.5,mid=Math.ceil(secs.length/2),yL=2.25,yR=2.25;
+    secs.forEach(function(sec,i){
+      var R=two&&i>=mid,x=R?7.7:0.8188,y=R?yR:yL;
+      if(sec.hdr){s2.addText(sec.hdr,{x:x,y:y,w:cW,h:0.26,fontSize:10,bold:true,color:TXTBLK,fontFace:HV});y+=0.28;}
+      sec.items.forEach(function(it){
+        if(it.n){s2.addText(it.t,{x:x,y:y,w:cW,h:0.24,fontSize:8.5,italic:true,color:TXTGRY,fontFace:HV,wrap:true});y+=0.27;}
+        else if(it.b){s2.addText(it.t,{x:x+0.18,y:y,w:cW-0.22,h:0.26,fontSize:10,color:'333333',fontFace:HV,wrap:true,bullet:{type:'bullet',characterCode:'2022',indent:5}});y+=0.29;}
+        else{s2.addText(it.t,{x:x,y:y,w:cW,h:0.32,fontSize:10.5,color:TXTGRY,fontFace:HV,wrap:true});y+=0.35;}
+      });
+      y+=0.15; if(R)yR=y;else yL=y;
+    });
+    footer(s2,dateStr);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 3 — INVESTMENT SUMMARY  (our addition, matches content slide chrome)
+  // ══════════════════════════════════════════════════════════════════════════
+  var s3 = contentSlide('Investment Summary');
+  if (cn||pn) s3.addText([(cn||''),(pn||'')].filter(Boolean).join(' — '),
+    {x:0.8188,y:1.74,w:11,h:0.28,fontSize:11,color:TXTGRY,fontFace:HV});
+
+  var mtx=[
+    {l:'TOTAL LABOR',       v:fmtM(laborAmt), s:Math.round(totalHrs)+' hrs total'},
+    {l:'EXTERNAL EXPENSES', v:hcAmt>0?fmtM(hcAmt):'TBD', s:hcAmt>0?hardCosts.length+' item(s)':'not yet scoped'},
+    {l:'TOTAL INVESTMENT',  v:fmtM(totalAmt), s:cur+' before tax'},
+  ];
+  var cW2=3.7,cH=1.55,cY=2.3,gap=0.28,cX=(13.33-(3*cW2+2*gap))/2;
+  mtx.forEach(function(m,i){
+    var cx=cX+i*(cW2+gap),tot=i===2;
+    s3.addShape(pptx.ShapeType.rect,{x:cx,y:cY,w:cW2,h:cH,
+      fill:{color:tot?BLACK:'F5F3EF'},line:{color:tot?BLACK:'E8E5E0',width:1}});
+    s3.addText(m.l,{x:cx+0.18,y:cY+0.18,w:cW2-0.36,h:0.24,fontSize:8,bold:true,
+      color:tot?'888888':TXTGRY,fontFace:HV,charSpacing:2});
+    s3.addText(m.v,{x:cx+0.18,y:cY+0.48,w:cW2-0.36,h:0.68,fontSize:28,bold:true,
+      color:tot?WHITE:TXTBLK,fontFace:HV_LT});
+    s3.addText(m.s,{x:cx+0.18,y:cY+1.22,w:cW2-0.36,h:0.25,fontSize:8.5,
+      color:tot?'888888':TXTGRY,fontFace:HV});
   });
+  if (hardCosts.length>0) {
+    var hcY=cY+cH+0.4;
+    s3.addText('EXTERNAL EXPENSES',{x:0.8188,y:hcY,w:12,h:0.26,
+      fontSize:8.5,bold:true,color:TXTBLK,fontFace:HV,charSpacing:2});
+    hcY+=0.3;
+    hardCosts.forEach(function(hc){
+      var lt=(hc.qty||1)*(hc.rate||0);
+      s3.addText('• '+(hc.desc||''),{x:0.8188,y:hcY,w:9.5,h:0.26,fontSize:10.5,color:TXTGRY,fontFace:HV});
+      s3.addText(fmtM(lt),{x:10.3,y:hcY,w:3.0,h:0.26,fontSize:10.5,bold:true,color:TXTBLK,fontFace:HV,align:'right'});
+      hcY+=0.28;
+    });
+  }
+  s3.addText('This estimate is valid for 30 days. Payment terms as per your Crew services agreement.',
+    {x:0.8188,y:6.65,w:12.33,h:0.28,fontSize:8.5,italic:true,color:TXTGRY,fontFace:HV,align:'center'});
+  footer(s3,dateStr);
 
-  // "Prepared by Crew" bottom right
-  s1.addText('Prepared by Crew Marketing Partners', {
-    x:7, y:6.9, w:5.83, h:0.3,
-    fontSize:9, color:'666666', fontFace:FONT, align:'right'
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 4 — PAYMENT TERMS DIVIDER
+  // Exact from template: black bg, "Payment Terms" 80pt bold at [0.7803,5.5771]
+  // ══════════════════════════════════════════════════════════════════════════
+  var s4 = pptx.addSlide();
+  s4.background = { color: BLACK };
+  s4.addText('Payment Terms',{x:0.7803,y:5.5771,w:9.3463,h:1.2185,
+    fontSize:80,bold:true,color:WHITE,fontFace:HV});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 5 — PAYMENT PROCESS
+  // Exact from template: title 40pt [0.8188,1.2676], rule y=2.1031
+  // Left col [0.8188,2.5314 5.4433×3.2032] — Right col [7.081,2.5314 5.1909×2.4347]
+  // Body was red 10pt → now black 10pt
+  // ══════════════════════════════════════════════════════════════════════════
+  var s5 = pptx.addSlide();
+  s5.background = { color: WHITE };
+  s5.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
+  s5.addText('Payment Process',{x:0.8188,y:1.2676,w:7.0507,h:0.4072,
+    fontSize:40,bold:true,color:TXTBLK,fontFace:HV});
+  s5.addShape(pptx.ShapeType.rect,{x:0.9406,y:2.1031,w:12.3927,h:0.008,
+    fill:{color:TXTBLK},line:{color:TXTBLK}});
+
+  // Left column — body was red → black
+  var leftBody = [
+    {t:'Payment Schedule',bold:true},{t:''},
+    {t:'Project fees amortized over the course of the engagement, with payment on the 1st of every month.',bold:false},
+    {t:'Any additional scopes or estimates will be approved separately.',bold:false},
+    {t:'If delivery extends beyond the agreed period due to client-related delays, the monthly fee will be extended for each subsequent month.',bold:false},
+    {t:''},
+    {t:'Estimate Terms',bold:true},{t:''},
+    {t:'This price quotation will be honored for 30 days from the day it was sent.',bold:false},
+    {t:''},
+    {t:'Payment Terms',bold:true},{t:''},
+    {t:'All Terms & Conditions are outlined in the Master Services Agreement and will be signed separately. Once the MSA is signed, these Terms and Conditions will hold for all future scoped work.',bold:false},
+  ];
+  s5.addText(leftBody.map(function(r){return r.t||''}).join('\n'),
+    {x:0.8188,y:2.5314,w:5.4433,h:3.2032,
+     fontSize:10,color:TXTBLK,fontFace:HV,wrap:true,valign:'top',paraSpaceBefore:5});
+
+  // Right column — Remittance Details, was non-red in template
+  var remit = isCad ? [
+    'Remittance Details','',
+    'Electronic Fund Transfer (EFT) is preferred.','',
+    'Bank: RBC Royal Bank of Canada',
+    'Branch (Transit) #: 01050',
+    'Bank #: 003',
+    'Swift Code: ROYCCAT2',
+    'Account #: 1012624',
+    'Bank Type: Chequing','',
+    'Interac E-Transfer to ap@crewmp.com',
+  ] : [
+    'Remittance Details','',
+    'ACH payment is preferred.','',
+    'Bank: Simmons Bank',
+    'Routing #: 082900432',
+    'Account #: 135405493',
+    'Bank Type: Chequing',
+    'Bank Address: 3737 S.W. Loop 820, Fort Worth TX 76133','',
+    'Please make checks payable to Crew Marketing US LP.',
+    'Mailing address: Crew Marketing US LP c/o Simmons Bank, 3737 S.W. Loop 820, Fort Worth TX 76102',
+  ];
+  s5.addText(remit.join('\n'),{x:7.081,y:2.5314,w:5.1909,h:2.4347,
+    fontSize:10,color:TXTBLK,fontFace:HV,wrap:true,valign:'top'});
+  footer(s5,dateStr);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 6 — PAYMENT & RESPONSE AGREEMENT
+  // Exact: title 36pt [0.8188,1.2676], rule y=2.1031
+  // Body single textbox [0.8188,2.5314 11.0722×4.528] 11pt
+  // ══════════════════════════════════════════════════════════════════════════
+  var s6 = pptx.addSlide();
+  s6.background = { color: WHITE };
+  s6.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
+  s6.addText('Payment and Response Agreement',{x:0.8188,y:1.2676,w:7.0507,h:0.4072,
+    fontSize:36,bold:true,color:TXTBLK,fontFace:HV});
+  s6.addShape(pptx.ShapeType.rect,{x:0.9406,y:2.1031,w:12.3927,h:0.008,
+    fill:{color:TXTBLK},line:{color:TXTBLK}});
+
+  s6.addText(
+    '1. Hard Costs and Deposits\n'
+    +'For projects with significant external hard costs (influencer fees, production, media), a 75% deposit is required before work begins.\n\n'
+    +'2. Payment Terms\n'
+    +'Invoices are due and payable within 15 days of receipt. Payments not received within 30 days will accrue interest at 2% per month (24% annually).\n\n'
+    +'3. Late Payments and Work Suspension\n'
+    +'If any payment is 45 days past due, a 7-day notice will be issued. If payment is not received within this period, all work will be suspended until payment is caught up.\n\n'
+    +'4. Response Timeliness\n'
+    +'The Client must respond to inquiries or project milestones within 15 business days. Failure may result in suspension of services. A reactivation fee of 15% of the total fees will apply after suspension.\n\n'
+    +'5. Shipping, Expenses, and Additional Costs\n'
+    +'All shipping, postage, and third-party costs are additional. Prior approval is required for out-of-pocket expenses (travel, stock photography, etc.).\n\n'
+    +'6. Termination and Final Payments\n'
+    +'If the agreement is terminated, any remaining agency fees become due immediately, along with applicable interest and taxes.\n\n'
+    +'Initials ___________',
+    {x:0.8188,y:2.5314,w:11.0722,h:4.528,
+     fontSize:11,color:TXTBLK,fontFace:HV,wrap:true,valign:'top',paraSpaceBefore:5});
+  footer(s6,dateStr);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 7 — BILLING INFORMATION
+  // Citron bar. "Company Name" was red 54pt Helvetica Light at [6.5128,1.3869]
+  // → replaced with actual client name in black.
+  // "BILLING INFORMATION" label at [8.5011,2.3462] was black → stays black.
+  // Body text + lines at [0.8188,1.3869].
+  // ══════════════════════════════════════════════════════════════════════════
+  var s7 = pptx.addSlide();
+  s7.background = { color: WHITE };
+  s7.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
+
+  // Company Name — was red 54pt → black, exact position
+  s7.addText(cn||'Company Name',{x:6.5128,y:1.3869,w:6.0017,h:0.9593,
+    fontSize:54,bold:false,color:TXTBLK,fontFace:HV_LT});
+
+  // "BILLING INFORMATION" label — was black → stays black, exact position
+  s7.addText('BILLING INFORMATION',{x:8.5011,y:2.3462,w:4.0134,h:0.2717,
+    fontSize:10,bold:true,color:TXTBLK,fontFace:HV});
+
+  // Body — exact position [0.8188,1.3869 4.8511×2.5274]
+  s7.addText(
+    'Please provide the following information for us to set up your billing & invoicing schedule:\n\n'
+    +'Accounting Contact Name /\n\n\n\n'
+    +'Billing Address /',
+    {x:0.8188,y:1.3869,w:4.8511,h:2.5274,
+     fontSize:12,color:TXTBLK,fontFace:HV,wrap:true,valign:'top'});
+
+  // Lines — exact positions from template
+  [3.2692, 4.1058, 4.5265, 4.923].forEach(function(ly){
+    s7.addShape(pptx.ShapeType.rect,{x:0.9268,y:ly,w:4.0732,h:0.008,
+      fill:{color:TXTBLK},line:{color:TXTBLK}});
   });
+  footer(s7,dateStr);
 
-  // ── SLIDE 2: Scope Description ────────────────────────────────────────────
-  if (scopeText.trim()) {
-    var s2 = pptx.addSlide();
-    s2.background = { color: WHITE };
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 8 — SIGNATURE  (proposal)
+  // Citron bar. "Client Name" was red 40pt Helvetica Light at [6.5128,1.3869]
+  // → client name in black.
+  // "TIKTOK PROPOSAL" label was red at [8.5011,2.2257] → service+date in citron.
+  // Witness block left side [0.8188,1.3869] — signature lines exact positions.
+  // ══════════════════════════════════════════════════════════════════════════
+  var s8 = pptx.addSlide();
+  s8.background = { color: WHITE };
+  s8.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
 
-    // Top accent bar
-    s2.addShape(pptx.ShapeType.rect, {
-      x:0, y:0, w:13.33, h:0.08,
-      fill:{ color:ACCENT }, line:{ color:ACCENT }
-    });
+  // Client Name — was red → black, exact position
+  s8.addText(cn||'Client Name',{x:6.5128,y:1.3869,w:6.0017,h:0.6617,
+    fontSize:40,bold:false,color:TXTBLK,fontFace:HV_LT});
 
-    // CREW wordmark
-    s2.addText('CREW', {
-      x:0.5, y:0.25, w:2, h:0.35,
-      fontSize:13, bold:true, color:BLACK,
-      fontFace:FONT, charSpacing:6
-    });
+  // "TIKTOK PROPOSAL" label — was red → citron, exact position
+  // Top line = service type, bottom line = MONTH / YEAR
+  s8.addText((pn||svcLbl||'PROPOSAL').toUpperCase()+'\n'+monthYr,
+    {x:8.5011,y:2.2257,w:4.0134,h:0.4636,
+     fontSize:10,bold:true,color:CITRON,fontFace:HV,align:'right'});
 
-    // Slide title
-    s2.addText('Project Scope', {
-      x:0.5, y:0.75, w:12.33, h:0.55,
-      fontSize:28, bold:true, color:BLACK, fontFace:FONT
-    });
+  // Witness block — was mix of black+red → all black, exact position
+  s8.addText(
+    'IN WITNESS WHEREOF the parties have executed\n'
+    +'this Agreement this _______ day of _______, '+yr+'.\n\n'
+    +entity+'\n'
+    +'Per /\n\n\n'
+    +'Braden Douglas\n\n\n\n'
+    +(cn||'Client Name')+'\n'
+    +'Per /\n\n\n'
+    +'Print Name /',
+    {x:0.8188,y:1.3869,w:5.694,h:4.7569,
+     fontSize:12,color:TXTBLK,fontFace:HV,wrap:true,valign:'top',paraSpaceBefore:4});
 
-    if (clientName || projectName) {
-      s2.addText((clientName ? clientName + (projectName ? ' — ' : '') : '') + (projectName || ''), {
-        x:0.5, y:1.35, w:12.33, h:0.3,
-        fontSize:12, color:T2, fontFace:FONT
+  // Signature lines — exact positions from template
+  s8.addShape(pptx.ShapeType.rect,{x:1.3637,y:3.609, w:3.9953,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  s8.addShape(pptx.ShapeType.rect,{x:1.3637,y:5.5706,w:3.9953,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  s8.addShape(pptx.ShapeType.rect,{x:1.9103,y:6.0065,w:3.4487,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  footer(s8,dateStr);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 9 — T&C DIVIDER
+  // Exact: black bg, "Terms & Conditions" 80pt at [0.7803,4.5001]
+  // ══════════════════════════════════════════════════════════════════════════
+  var s9 = pptx.addSlide();
+  s9.background = { color: BLACK };
+  s9.addText('Terms &\nConditions',{x:0.7803,y:4.5001,w:9.3463,h:2.2955,
+    fontSize:80,bold:true,color:WHITE,fontFace:HV,lineSpacingMultiple:1.0});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDES 10-12 — MSA PAGES
+  // Exact: title 24pt bold [0.8188,0.5068 3.6666×0.4619]
+  // Rule: [0.9406,1.0163 w=12.3927]
+  // Body: 9pt Helvetica, two-column
+  // ══════════════════════════════════════════════════════════════════════════
+  function msaSlide(title, leftSecs, rightSecs) {
+    var sl = pptx.addSlide();
+    sl.background = { color: WHITE };
+    // Title — exact position/size
+    sl.addText(title,{x:0.8188,y:0.5068,w:12.3927,h:0.4619,
+      fontSize:24,bold:true,color:TXTBLK,fontFace:HV});
+    // Rule — exact position
+    sl.addShape(pptx.ShapeType.rect,{x:0.9406,y:1.0163,w:12.3927,h:0.008,
+      fill:{color:TXTBLK},line:{color:TXTBLK}});
+    // Two-column body
+    function col(secs, x) {
+      var y=1.12;
+      secs.forEach(function(s){
+        sl.addText(s.h,{x:x,y:y,w:5.85,h:0.21,fontSize:9,bold:true,color:TXTBLK,fontFace:HV}); y+=0.22;
+        sl.addText(s.b,{x:x,y:y,w:5.85,h:s.bh||0.58,fontSize:9,bold:false,color:'333333',fontFace:HV,wrap:true,lineSpacingMultiple:1.2,autoFit:true}); y+=(s.bh||0.58)+0.1;
       });
     }
-
-    // Divider
-    s2.addShape(pptx.ShapeType.rect, {
-      x:0.5, y:1.75, w:12.33, h:0.02,
-      fill:{ color:BLACK, transparency:85 }, line:{ color:BLACK, transparency:85 }
-    });
-
-    // Parse scope text into sections
-    var lines = scopeText.split('\n');
-    var sections = [];
-    var currentSection = null;
-
-    lines.forEach(function(line) {
-      var trimmed = line.trim();
-      if (!trimmed) return;
-
-      // Detect section headers (lines not starting with • or ·, not a note)
-      if (!trimmed.startsWith('•') && !trimmed.startsWith('·') && !trimmed.startsWith('·') &&
-          !trimmed.startsWith('Note') && !trimmed.startsWith('*') &&
-          (trimmed.endsWith(':') || sections.length === 0)) {
-        currentSection = { header: trimmed.replace(/:$/, ''), items: [] };
-        sections.push(currentSection);
-      } else if (currentSection) {
-        currentSection.items.push(trimmed);
-      } else {
-        sections.push({ header: null, items: [trimmed] });
-        currentSection = sections[sections.length - 1];
-      }
-    });
-
-    // Render sections into 2 columns if there are many
-    var yPos = 1.9;
-    var xLeft = 0.5;
-    var xRight = 7.0;
-    var colW = 6.0;
-    var useTwo = sections.length >= 4;
-    var col = 0;
-
-    sections.forEach(function(sec, idx) {
-      var x = useTwo ? (col === 0 ? xLeft : xRight) : xLeft;
-      var w = useTwo ? colW : 12.33;
-
-      if (sec.header && !sec.header.match(/^(Note|Exclusion|\*)/i)) {
-        // Section label
-        s2.addText(sec.header.toUpperCase(), {
-          x:x, y:yPos, w:w, h:0.28,
-          fontSize:9, bold:true, color:ACCENT,
-          fontFace:FONT, charSpacing:3
-        });
-        yPos += 0.3;
-      }
-
-      sec.items.forEach(function(item) {
-        var isNote = item.match(/^(Note|Exclusion|\*)/i);
-        var isBullet = item.startsWith('•') || item.startsWith('·');
-        var cleanItem = item.replace(/^[•·]\s*/, '').replace(/^·\s*/, '');
-
-        if (isNote) {
-          s2.addText(cleanItem, {
-            x:x, y:yPos, w:w, h:0.25,
-            fontSize:8.5, italic:true, color:T3, fontFace:FONT, wrap:true
-          });
-          yPos += 0.3;
-        } else if (isBullet) {
-          s2.addText(cleanItem, {
-            x:x+0.15, y:yPos, w:w-0.2, h:0.25,
-            fontSize:10.5, color:BLACK, fontFace:FONT, wrap:true,
-            bullet:{ type:'bullet', characterCode:'2022', indent:5 }
-          });
-          yPos += 0.28;
-        } else {
-          // Body text
-          s2.addText(item, {
-            x:x, y:yPos, w:w, h:0.35,
-            fontSize:11, color:T2, fontFace:FONT, wrap:true
-          });
-          yPos += 0.38;
-        }
-      });
-
-      yPos += 0.15; // gap between sections
-
-      // Switch column
-      if (useTwo && col === 0 && idx === Math.floor(sections.length / 2) - 1) {
-        col = 1;
-        yPos = 1.9;
-      }
-    });
-
-    // Footer
-    s2.addText('Crew Marketing Partners  ·  Internal use only', {
-      x:0.5, y:7.1, w:12.33, h:0.25,
-      fontSize:8, color:T3, fontFace:FONT, align:'center'
-    });
+    col(leftSecs,  0.8188);
+    col(rightSecs, 7.2);
+    sl.addText(entity,{x:0.5,y:7.15,w:12.83,h:0.22,fontSize:7.5,color:TXTGRY,fontFace:HV,align:'right'});
+    return sl;
   }
 
-  // ── SLIDE 3: Investment ───────────────────────────────────────────────────
-  var s3 = pptx.addSlide();
-  s3.background = { color: WHITE };
+  var gov = isCad
+    ? 'the laws of the Province of British Columbia and the laws of Canada applicable in such Province'
+    : 'the internal laws of the State of Texas and the laws of the United States applicable in such state';
 
-  // Top accent bar
-  s3.addShape(pptx.ShapeType.rect, {
-    x:0, y:0, w:13.33, h:0.08,
-    fill:{ color:ACCENT }, line:{ color:ACCENT }
-  });
+  msaSlide(entity+' Master Services Agreement',[
+    {h:'1.1 No Partnership',b:'The Consultant is an independent contractor. This Agreement will not be construed as creating an employment, partnership, joint venture, or agency relationship between the parties.',bh:0.55},
+    {h:'2.1 Confidentiality',b:'The Consultant will treat all Confidential Information in strict confidence and will not disclose it unless required by law or approved in writing by the Company. All documents containing Confidential Information are the property of the Company.',bh:0.65},
+    {h:'2.2 Exceptions to Confidentiality',b:'Obligations under 2.1 do not apply to: (a) information in the public domain; (b) information that subsequently becomes public through no fault of the Consultant; or (c) information required to be disclosed by law.',bh:0.6},
+  ],[
+    {h:'3.1 Ownership — Used Work Products',b:'With the exception of source files, the Consultant acquires no rights in work products derived from the concept chosen by the Company for their branding.'+(isCad?'':' The Consultant hereby assigns to the Client all right, title and interest in all Company Work Products.'),bh:0.65},
+    {h:'3.1 Ownership — Unused Work Products',b:'The Consultant retains all rights in unused concepts and design ideas not chosen by the Company. Source files, if requested, will be billed at an hourly rate. Crew keeps client files archived for 5 years after project completion.',bh:0.65},
+    {h:'4.1 Estimated Results',b:'The Consultant makes no warranties, express or implied, as to the Company achieving estimated results. Any return-on-investment calculations are estimated projections only.',bh:0.5},
+  ]);
 
-  // CREW wordmark
-  s3.addText('CREW', {
-    x:0.5, y:0.25, w:2, h:0.35,
-    fontSize:13, bold:true, color:BLACK, fontFace:FONT, charSpacing:6
-  });
+  msaSlide('Terms & Conditions cont.',[
+    {h:'5.1 Term',b:'This Agreement takes effect on the Effective Date and continues until completion of Services or written termination. Sections 2.1, 2.2, 3.1, and 9.1 survive termination.',bh:0.5},
+    {h:'6.1 Arbitration',b:'All disputes shall be referred to and finally resolved by arbitration under the Rules of the British Columbia International Commercial Arbitration Centre'+(isCad?'.':' or another agreed upon arbitration center.'),bh:0.5},
+    {h:isCad?'7.1 Enurement':'7.1 Successors and Assigns',b:'This Agreement shall enure to the benefit of and be binding on the parties and their respective heirs, executors, administrators, successors, and assigns.',bh:0.45},
+    {h:'8.1 Amendments',b:'No change or modification of this Agreement will be valid unless it is in writing and signed by each party.',bh:0.4},
+  ],[
+    {h:'9.1 Governing Law',b:'This Agreement will be governed by and construed in accordance with '+gov+'.',bh:0.45},
+    {h:'10.1 Case Studies',b:'The Consultant '+(isCad?'will use':'will be entitled to use')+' project results as case studies in future promotions with permission from the Company.',bh:0.45},
+    {h:'11.1 Limitation of Liability',b:'The Consultant is not responsible for failure of third-party contractors, defects in client-supplied data or equipment, client project decisions, or consequential damages. Total liability is strictly limited to professional fees charged for this project.',bh:0.68},
+    {h:'11.2 Disclaimer',b:'Except as expressly set forth in this agreement, the Consultant makes no representations or warranties, express or implied, including warranties of merchantability, fitness for purpose, or non-infringement.',bh:0.65},
+  ]);
 
-  // Slide title
-  s3.addText('Investment Summary', {
-    x:0.5, y:0.75, w:12.33, h:0.55,
-    fontSize:28, bold:true, color:BLACK, fontFace:FONT
-  });
+  msaSlide('Terms & Conditions cont.',[
+    {h:'12.1 Indemnification',b:'The Company will defend, indemnify, and hold harmless the Consultant against losses arising from third-party claims relating to the Company\'s gross negligence, willful misconduct, or material breach of this agreement.',bh:0.68},
+    {h:'13.1 Communication',b:'If the Company fails to respond within 15 business days, the Consultant may suspend Services. Suspension beyond 30 days results in invoicing for partially completed work. A 15% reactivation fee applies. Suspension beyond 90 days automatically terminates the Agreement.',bh:0.78},
+    {h:'14.1 Delays',b:'The Consultant is not liable for delays caused by events beyond its control, including theft of equipment, hardware/software failures, employee sickness, catastrophic weather, or Acts of God.',bh:0.6},
+  ],[
+    {h:'15.1 Payment',b:'Invoices are due on receipt unless otherwise agreed. Overdue invoices accrue interest at 2%/month (24% annually). All fees are subject to applicable taxes. A 75% non-refundable deposit is required for hard costs. The Company agrees to pay up to 10% over approved fees for authorized overages.',bh:0.82},
+    {h:isCad?'11.3 Compliance Obligations (AODA)':'11.3 Compliance Obligations (ADA)',b:'Crew shall not be liable for local, '+(isCad?'provincial, or federal':'state, or federal')+' accessibility compliance requirements. Crew may suggest third-party monitoring tools but makes no warranty these tools will meet all compliance requirements.',bh:0.7},
+  ]);
 
-  if (clientName || projectName) {
-    s3.addText((clientName ? clientName + (projectName ? ' — ' : '') : '') + (projectName || ''), {
-      x:0.5, y:1.35, w:12.33, h:0.3,
-      fontSize:12, color:T2, fontFace:FONT
-    });
-  }
+  // ══════════════════════════════════════════════════════════════════════════
+  // SLIDE 13 — MSA CLOSING SIGNATURE
+  // Same layout as slide 8 but label says "MASTER SERVICES AGREEMENT"
+  // "Client Name" was red → black. Label was red → citron.
+  // ══════════════════════════════════════════════════════════════════════════
+  var s13 = pptx.addSlide();
+  s13.background = { color: WHITE };
+  s13.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.3333,h:0.119,fill:{color:CITRON},line:{color:CITRON}});
 
-  // Divider
-  s3.addShape(pptx.ShapeType.rect, {
-    x:0.5, y:1.75, w:12.33, h:0.02,
-    fill:{ color:BLACK, transparency:85 }, line:{ color:BLACK, transparency:85 }
-  });
+  // Client Name — was red → black, exact position
+  s13.addText(cn||'Client Name',{x:6.5128,y:1.3869,w:6.0017,h:0.6617,
+    fontSize:40,bold:false,color:TXTBLK,fontFace:HV_LT});
 
-  // Investment metric cards
-  var metrics = [
-    { label:'TOTAL LABOR', value: '$' + laborAmt.toLocaleString('en-CA') },
-    { label:'EXTERNAL EXPENSES', value: hcAmt > 0 ? '$' + hcAmt.toLocaleString('en-CA') : 'TBD' },
-    { label:'TOTAL INVESTMENT', value: '$' + totalAmt.toLocaleString('en-CA') },
-  ];
+  // "MASTER SERVICES AGREEMENT" label — was red → citron, exact position
+  s13.addText('MASTER SERVICES AGREEMENT\n'+monthYr,
+    {x:8.5011,y:2.2257,w:4.0134,h:0.4636,
+     fontSize:10,bold:true,color:CITRON,fontFace:HV,align:'right'});
 
-  var cardW = 3.6;
-  var cardH = 1.5;
-  var cardY = 2.1;
-  var gap = 0.4;
-  var startX = (13.33 - (metrics.length * cardW + (metrics.length-1) * gap)) / 2;
+  // Witness block — all black, exact position
+  s13.addText(
+    'IN WITNESS WHEREOF the parties have executed\n'
+    +'this Agreement this _______ day of _______, '+yr+'.\n\n'
+    +entity+'\n'
+    +'Per /\n\n\n'
+    +'Braden Douglas\n\n\n\n'
+    +(cn||'Client Name')+'\n'
+    +'Per /\n\n\n'
+    +'Print Name /',
+    {x:0.8188,y:1.3869,w:5.694,h:4.7569,
+     fontSize:12,color:TXTBLK,fontFace:HV,wrap:true,valign:'top',paraSpaceBefore:4});
 
-  metrics.forEach(function(m, i) {
-    var cx = startX + i * (cardW + gap);
-    var isTotal = i === metrics.length - 1;
+  // Signature lines — exact positions
+  s13.addShape(pptx.ShapeType.rect,{x:1.3637,y:3.609, w:3.9953,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  s13.addShape(pptx.ShapeType.rect,{x:1.3637,y:5.5706,w:3.9953,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  s13.addShape(pptx.ShapeType.rect,{x:1.9103,y:6.0065,w:3.4487,h:0.008,fill:{color:TXTBLK},line:{color:TXTBLK}});
+  footer(s13,dateStr);
 
-    // Card background
-    s3.addShape(pptx.ShapeType.rect, {
-      x:cx, y:cardY, w:cardW, h:cardH,
-      fill:{ color: isTotal ? BLACK : OFF },
-      line:{ color: isTotal ? BLACK : 'E8E5E0', width:1 },
-      shadow:{ type:'outer', blur:4, offset:2, angle:270, color:'000000', opacity:0.06 }
-    });
-
-    // Label
-    s3.addText(m.label, {
-      x:cx+0.2, y:cardY+0.22, w:cardW-0.4, h:0.3,
-      fontSize:9, bold:true, color: isTotal ? 'AAAAAA' : T3,
-      fontFace:FONT, charSpacing:3
-    });
-
-    // Value
-    s3.addText(m.value, {
-      x:cx+0.2, y:cardY+0.6, w:cardW-0.4, h:0.65,
-      fontSize:32, bold:true, color: isTotal ? WHITE : BLACK,
-      fontFace:FONT
-    });
-  });
-
-  // Hard costs line items (if any)
-  if (hardCosts.length > 0) {
-    var hcY = cardY + cardH + 0.5;
-    s3.addText('EXTERNAL EXPENSES', {
-      x:0.5, y:hcY, w:12.33, h:0.28,
-      fontSize:9, bold:true, color:ACCENT, fontFace:FONT, charSpacing:3
-    });
-    hcY += 0.3;
-
-    hardCosts.forEach(function(hc) {
-      var lineTotal = (hc.qty||1) * (hc.rate||0);
-      s3.addText('• ' + hc.desc, {
-        x:0.5, y:hcY, w:9, h:0.26,
-        fontSize:11, color:T2, fontFace:FONT
-      });
-      s3.addText('$' + lineTotal.toLocaleString('en-CA'), {
-        x:9.5, y:hcY, w:3.33, h:0.26,
-        fontSize:11, color:BLACK, fontFace:FONT, align:'right', bold:true
-      });
-      hcY += 0.28;
-    });
-  }
-
-  // Note about billing
-  s3.addText('This investment excludes applicable taxes. Payment terms as per your Crew services agreement.', {
-    x:0.5, y:6.3, w:12.33, h:0.35,
-    fontSize:9, italic:true, color:T3, fontFace:FONT, align:'center'
-  });
-
-  // Footer
-  s3.addText('Crew Marketing Partners  ·  ' + dateStr, {
-    x:0.5, y:7.1, w:12.33, h:0.25,
-    fontSize:8, color:T3, fontFace:FONT, align:'center'
-  });
-
-  // ── Generate & download ────────────────────────────────────────────────────
-  var filename = ((clientName || 'Crew') + ' — ' + (projectName || svcLabel || 'Scope') + '.pptx')
-    .replace(/[^a-zA-Z0-9 \-–—\.]/g, '').trim();
-
-  pptx.writeFile({ fileName: filename }).then(function() {
-    if (btn) { btn.textContent = '↓ Export to PPT'; btn.disabled = false; }
-  }).catch(function(err) {
-    console.error('PPT export error:', err);
-    if (btn) { btn.textContent = '↓ Export to PPT'; btn.disabled = false; }
-    alert('Export failed. Please try again.');
+  // ── Generate ───────────────────────────────────────────────────────────────
+  var fname = [(cn||'Crew'),(pn||svcLbl||'Proposal'),cur].filter(Boolean).join(' — ')
+    .replace(/[^a-zA-Z0-9 \-–—\.]/g,'').trim()+'.pptx';
+  pptx.writeFile({fileName:fname}).then(function(){
+    if(btn){btn.textContent='↓ Export to PPT';btn.disabled=false;}
+  }).catch(function(err){
+    console.error(err);
+    if(btn){btn.textContent='↓ Export to PPT';btn.disabled=false;}
+    alert('Export failed — please try again.');
   });
 }
+
 
 function renderHardCosts() {
   const wrap = document.getElementById('hardCostRows');
